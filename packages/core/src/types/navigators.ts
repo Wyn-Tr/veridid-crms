@@ -1,0 +1,310 @@
+import { MdocRecord, SdJwtVcRecord, W3cCredentialRecord } from '@credo-ts/core'
+import { NavigatorScreenParams } from '@react-navigation/native'
+import { StackNavigationOptions } from '@react-navigation/stack'
+import { OpenId4VciPendingCredentialOffer, OpenId4VPRequestRecord, OpenIDCredentialType } from '../modules/openid/types'
+import { LayoutProps } from '../layout/ScreenLayout'
+
+export enum Screens {
+  AttemptLockout = 'Temporarily Locked',
+  Splash = 'Splash',
+  Onboarding = 'Onboarding',
+  Terms = 'Terms',
+  Preface = 'Preface',
+  CreatePIN = 'Create a PIN',
+  ChangePIN = 'Change PIN',
+  ChangePINConfirmation = 'Change PIN Confirmation',
+  ChangePINSuccess = 'Change PIN Success',
+  EnterPIN = 'Enter PIN',
+  VerifyPIN = 'Verify PIN',
+  Home = 'Home',
+  Scan = 'Scan',
+  PasteUrl = 'Paste URL',
+  Credentials = 'Credentials',
+  CredentialDetails = 'Credential Details',
+  CredentialOffer = 'Credential Offer',
+  OpenIDCredentialDetails = 'Open ID Credential details',
+  OpenIDCredentialOffer = 'Open ID Credential offer',
+  OpenIDProofPresentation = 'Open ID Proof Presentation',
+  OpenIDProofCredentialSelect = 'Open ID Proof Credential Select',
+  ProofRequest = 'Proof Request',
+  ProofRequestDetails = 'Proof Request Details',
+  ProofRequestUsageHistory = 'Proof Request Usage History',
+  Settings = 'Settings',
+  Language = 'Language',
+  DataRetention = 'Data Retention',
+  Tours = 'Tours',
+  Contacts = 'Contacts',
+  ContactDetails = 'Contact Details',
+  WhatAreContacts = 'What Are Contacts',
+  Chat = 'Chat',
+  Connection = 'Connection',
+  MobileVerifierLoading = 'Mobile Verifier Loading',
+  OnTheWay = 'On The Way',
+  Declined = 'Declined',
+  Biometry = 'Biometry',
+  ToggleBiometry = 'Toggle Biometry',
+  PushNotifications = 'Push Notifications',
+  TogglePushNotifications = 'Toggle Push Notifications',
+  Developer = 'Developer',
+  CustomNotification = 'Custom Notification',
+  ProofChangeCredential = 'Choose a credential',
+  ProofRequests = 'Proof Requests',
+  ProofRequesting = 'Proof Requesting',
+  ProofDetails = 'Proof Details',
+  NameWallet = 'Name Wallet',
+  RenameWallet = 'Rename Wallet',
+  RenameContact = 'Rename Contact',
+  JSONDetails = 'JSON Details',
+  ScanHelp = 'Scan Help',
+  HistorySettings = 'History Settings',
+  HistoryPage = 'History',
+  HistoryDetails = 'History details',
+  AutoLock = 'AutoLock',
+  UpdateAvailable = 'Update Available',
+  ConfigureMediator = 'Configure Mediator',
+  ESSIGovernmentIDTypes = 'Government ID Types',
+  ESSIAadharImport = 'Import Aadhar KYC',
+  ESSIAadharList = 'Aadhar KYC Documents',
+  ESSIDigilockerImport = 'Import via DigiLocker',
+  // POE Beta Features
+  BetaFeatures = 'Beta Features',
+  POETimeProof = 'POE Time Proof',
+  POELocationProof = 'POE Location Proof',
+  // ESSI Screens
+  ESSICreateInvite = 'Create Invite',
+  ESSICredentialDetails = 'ESSI Credential Details',
+  // Workflow Screens
+  WorkflowList = 'Workflows',
+  WorkflowDetails = 'Workflow Details',
+  // Settings Screens
+  About = 'About',
+  PrivacyPolicy = 'Privacy Policy',
+  HelpSupport = 'Help & Support',
+  // Video Call Screens
+  VideoCall = 'Video Call',
+  IncomingCall = 'Incoming Call',
+  // OpenBadge Screens
+  OpenBadgeDetails = 'OpenBadge Details',
+}
+
+export enum Stacks {
+  TabStack = 'Tab Stack',
+  HomeStack = 'Home Stack',
+  ConnectStack = 'Connect Stack',
+  CredentialStack = 'Credentials Stack',
+  SettingStack = 'Settings Stack',
+  ContactStack = 'Contacts Stack',
+  ProofRequestsStack = 'Proof Requests Stack',
+  NotificationStack = 'Notifications Stack',
+  ConnectionStack = 'Connection Stack',
+  HistoryStack = 'History Stack',
+  CustomNavStack1 = 'Custom Nav Stack 1',
+}
+
+export enum TabStacks {
+  HomeStack = 'Tab Home Stack',
+  ConnectStack = 'Tab Connect Stack',
+  CredentialStack = 'Tab Credential Stack',
+  ContactStack = 'Tab Contact Stack',
+  SettingStack = 'Tab Setting Stack',
+}
+
+export type RootStackParams = {
+  [Screens.Splash]: undefined
+  [Stacks.TabStack]: NavigatorScreenParams<TabStackParams>
+  [Screens.Chat]: { connectionId: string }
+  [Stacks.ConnectStack]: NavigatorScreenParams<ConnectStackParams>
+  [Stacks.ConnectionStack]: NavigatorScreenParams<DeliveryStackParams>
+  [Stacks.SettingStack]: NavigatorScreenParams<SettingStackParams>
+  [Stacks.ContactStack]: NavigatorScreenParams<ContactStackParams>
+  [Stacks.ProofRequestsStack]: NavigatorScreenParams<ProofRequestsStackParams>
+  [Stacks.NotificationStack]: NavigatorScreenParams<NotificationStackParams>
+  [Stacks.HistoryStack]: NavigatorScreenParams<HistoryStackParams>
+  [Screens.CredentialDetails]: { credentialId: string }
+  [Screens.OpenIDCredentialDetails]: { credentialId: string; type: OpenIDCredentialType }
+  [Stacks.CustomNavStack1]: undefined
+  // Workflow Screens
+  [Screens.WorkflowList]: undefined
+  [Screens.WorkflowDetails]: { instanceId: string }
+  // Video Call Screens
+  [Screens.VideoCall]: { connectionId: string; threadId?: string; video?: boolean; isIncoming?: boolean; remoteSdp?: string; iceServers?: Array<{ urls: string | string[]; username?: string; credential?: string }> }
+  [Screens.IncomingCall]: { connectionId: string; threadId: string; sdp: string; callerLabel?: string; iceServers?: Array<{ urls: string | string[]; username?: string; credential?: string }> }
+  // OpenBadge Screens
+  [Screens.OpenBadgeDetails]: { credentialId: string }
+}
+
+export type TabStackParams = {
+  [TabStacks.HomeStack]: NavigatorScreenParams<HomeStackParams>
+  [TabStacks.ConnectStack]: NavigatorScreenParams<ConnectStackParams>
+  [TabStacks.CredentialStack]: NavigatorScreenParams<CredentialStackParams>
+  [TabStacks.ContactStack]: NavigatorScreenParams<ContactStackParams>
+  [TabStacks.SettingStack]: NavigatorScreenParams<SettingStackParams>
+}
+
+export type OnboardingStackParams = {
+  [Screens.Preface]: undefined
+  [Screens.Onboarding]: undefined
+  [Screens.Terms]: undefined
+  [Screens.AttemptLockout]: undefined
+  [Screens.CreatePIN]: { setAuthenticated: (status: boolean) => void } | undefined
+  [Screens.EnterPIN]: { setAuthenticated: (status: boolean) => void } | undefined
+  [Screens.Biometry]: undefined
+  [Screens.NameWallet]: undefined
+  [Screens.PushNotifications]: undefined
+}
+
+export type ContactStackParams = {
+  [Screens.Contacts]: undefined
+  [Screens.Chat]: { connectionId: string }
+  [Screens.ContactDetails]: { connectionId: string }
+  [Screens.RenameContact]: { connectionId: string }
+  [Screens.WhatAreContacts]: undefined
+  [Screens.CredentialDetails]: { credentialId: string }
+  [Screens.CredentialOffer]: { credentialId: string }
+  [Screens.ProofDetails]: { recordId: string; isHistory?: boolean }
+  [Screens.ProofRequest]: { proofId: string }
+  [Screens.JSONDetails]: { jsonBlob: any }
+  [Screens.ESSICreateInvite]: undefined
+}
+
+export type ProofRequestsStackParams = {
+  [Screens.ProofRequests]: { connectionId?: string }
+  [Screens.ProofRequesting]: { templateId: string; predicateValues?: Record<string, Record<string, number>> }
+  [Screens.ProofDetails]: { recordId: string; isHistory?: boolean; senderReview?: boolean }
+  [Screens.ProofRequestDetails]: { templateId: string; connectionId?: string }
+  [Screens.MobileVerifierLoading]: { proofId: string; connectionId: string }
+  [Screens.ProofRequestUsageHistory]: { templateId: string }
+  [Screens.ProofChangeCredential]: {
+    selectedCred: string
+    altCredentials: string[]
+    proofId: string
+    onCredChange: (arg: string) => void
+  }
+}
+
+export type CredentialStackParams = {
+  [Screens.Credentials]: undefined
+  [Screens.JSONDetails]: { jsonBlob: string }
+  [Screens.ESSIGovernmentIDTypes]: undefined
+  [Screens.ESSIAadharImport]: undefined
+  [Screens.ESSIAadharList]: undefined
+  [Screens.ESSIDigilockerImport]: {
+    title?: string
+    description?: string
+    reqDoctype?: string
+    scopes?: string
+    acr?: string
+    viewIssued?: boolean
+  }
+  [Screens.ESSICredentialDetails]: { credentialId: string }
+}
+
+export type HomeStackParams = {
+  [Screens.Home]: undefined
+  [Screens.ESSIGovernmentIDTypes]: undefined
+  [Screens.ESSIAadharImport]: undefined
+  [Screens.ESSIAadharList]: undefined
+  [Screens.ESSIDigilockerImport]: {
+    title?: string
+    description?: string
+    reqDoctype?: string
+    scopes?: string
+    acr?: string
+    viewIssued?: boolean
+  }
+}
+
+export type ConnectStackParams = {
+  [Screens.Scan]: undefined
+  [Screens.RenameWallet]: undefined
+  [Screens.ScanHelp]: undefined
+  [Screens.PasteUrl]: undefined
+}
+
+export type SettingStackParams = {
+  [Screens.RenameWallet]: undefined
+  [Screens.Settings]: undefined
+  [Screens.Language]: undefined
+  [Screens.DataRetention]: undefined
+  [Screens.Tours]: undefined
+  [Screens.ToggleBiometry]: undefined
+  [Screens.ChangePIN]: undefined
+  [Screens.ChangePINSuccess]: undefined
+  [Screens.Terms]: undefined
+  [Screens.Onboarding]: undefined
+  [Screens.Developer]: undefined
+  [Screens.TogglePushNotifications]: undefined
+  [Screens.HistorySettings]: undefined
+  [Screens.AutoLock]: undefined
+  [Screens.ConfigureMediator]: { scannedMediatorUri: string } | undefined
+  // POE Beta Features
+  [Screens.BetaFeatures]: undefined
+  [Screens.POETimeProof]: undefined
+  [Screens.POELocationProof]: undefined
+  // Settings Info Screens
+  [Screens.About]: undefined
+  [Screens.PrivacyPolicy]: undefined
+  [Screens.HelpSupport]: undefined
+}
+
+export type NotificationStackParams = {
+  [Screens.CredentialDetails]: { credentialId: string }
+  [Screens.OpenIDCredentialDetails]: {
+    credential: SdJwtVcRecord | W3cCredentialRecord
+  }
+  [Screens.CredentialOffer]: { credentialId: string }
+  [Screens.ProofRequest]: { proofId: string }
+  [Screens.CustomNotification]: undefined
+  [Screens.ProofDetails]: { recordId: string }
+}
+
+export type DeliveryStackParams = {
+  [Screens.Connection]: {
+    oobRecordId?: string
+    proofId?: string
+    credentialId?: string
+    openIDUri?: string
+    openIDPresentationUri?: string
+  }
+  [Screens.MobileVerifierLoading]: { proofId: string; connectionId: string }
+  [Screens.ProofDetails]: { recordId: string }
+  [Screens.CredentialOffer]: { credentialId: string }
+  [Screens.ProofRequest]: { proofId: string }
+  [Screens.OnTheWay]: { credentialId: string }
+  [Screens.Declined]: { credentialId: string }
+  [Screens.Chat]: { connectionId: string }
+  [Screens.OpenIDCredentialOffer]: {
+    credential: SdJwtVcRecord | W3cCredentialRecord | MdocRecord | OpenId4VciPendingCredentialOffer
+  }
+  [Screens.OpenIDProofPresentation]: { credential: OpenId4VPRequestRecord }
+  [Screens.OpenIDProofCredentialSelect]: {
+    inputDescriptorID: string
+    selectedCredID: string
+    altCredIDs: {
+      id: string
+      claimFormat: string
+    }[]
+    onCredChange: ({
+      inputDescriptorID,
+      id,
+      claimFormat,
+    }: {
+      inputDescriptorID: string
+      id: string
+      claimFormat: string
+    }) => void
+  }
+}
+
+export type HistoryStackParams = {
+  [Screens.HistoryPage]: undefined
+}
+
+export type ScreenLayoutConfig = Partial<Record<Screens, LayoutProps>>
+
+export type ScreenOptionsType = Partial<Record<Screens, StackNavigationOptions>>
+
+export type OnboardingTask = {
+  name: Screens
+  completed: boolean
+}

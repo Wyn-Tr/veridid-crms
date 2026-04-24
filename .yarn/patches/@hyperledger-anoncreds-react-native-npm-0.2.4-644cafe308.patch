@@ -1,0 +1,23 @@
+diff --git a/android/CMakeLists.txt b/android/CMakeLists.txt
+index 5cc55c5ee3d05cbe9a7b92b0d1b031e0166c7456..9170746204ade57f64a3585b70e5bb8819329ffb 100644
+--- a/android/CMakeLists.txt
++++ b/android/CMakeLists.txt
+@@ -8,6 +8,9 @@ file (GLOB LIBANONCREDS_DIR "${CMAKE_SOURCE_DIR}/../native/mobile/android/${ANDR
+ set(CMAKE_VERBOSE_MAKEFILE ON)
+ set(CMAKE_CXX_STANDARD 14)
+
++# Enable 16KB page alignment for Android 15+ compatibility
++set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
++
+ set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
+ if(${REACT_NATIVE_VERSION} GREATER_EQUAL 71)
+   find_package(fbjni REQUIRED CONFIG)
+@@ -91,7 +94,7 @@ if(${REACT_NATIVE_VERSION} GREATER_EQUAL 71)
+   target_link_libraries(
+     ${PACKAGE_NAME}
+     ReactAndroid::jsi
+-    ReactAndroid::reactnativejni
++    ReactAndroid::reactnative
+     fbjni::fbjni
+   )
+ elseif(${REACT_NATIVE_VERSION} LESS 66)

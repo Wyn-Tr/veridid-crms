@@ -1,0 +1,300 @@
+diff --git a/build/WorkflowModule.js b/build/WorkflowModule.js
+--- a/build/WorkflowModule.js
++++ b/build/WorkflowModule.js
+@@ -159,293 +159,9 @@
+                 await scoped.release();
+             }
+         });
+-        // Optional: register payments v1 actions when payments module is available
+-        try {
+-            let createPaymentsV1Actions;
+-            try {
+-                ;
+-                ({ createPaymentsV1Actions } = require('@credo-ts/payments'));
+-            }
+-            catch {
+-                /* optional dependency */
+-            }
+-            if (!createPaymentsV1Actions) {
+-                try {
+-                    ;
+-                    ({ createPaymentsV1Actions } = require('@credo-ts/payments/workflow/PaymentsV1Actions'));
+-                }
+-                catch {
+-                    /* optional dependency */
+-                }
+-            }
+-            if (!createPaymentsV1Actions) {
+-                try {
+-                    ;
+-                    ({ createPaymentsV1Actions } = require('@credo-ts/payments/workflow/PaymentsV1Actions'));
+-                }
+-                catch {
+-                    /* optional dependency */
+-                }
+-            }
+-            // Try @ajna-inc/payments (static require for React Native compatibility)
+-            if (!createPaymentsV1Actions) {
+-                try {
+-                    ;
+-                    ({ createPaymentsV1Actions } = require('@ajna-inc/payments'));
+-                }
+-                catch {
+-                    /* optional dependency */
+-                }
+-            }
+-            if (!createPaymentsV1Actions) {
+-                try {
+-                    ;
+-                    ({ createPaymentsV1Actions } = require('@ajna-inc/payments/workflow/PaymentsV1Actions'));
+-                }
+-                catch {
+-                    /* optional dependency */
+-                }
+-            }
+-            if (createPaymentsV1Actions) {
+-                const actions = createPaymentsV1Actions();
+-                try {
+-                    // Prefer explicit API if available
+-                    const svcAny = service;
+-                    if (typeof svcAny.registerActions === 'function') {
+-                        svcAny.registerActions(actions);
+-                    }
+-                    else if (svcAny.actions && typeof svcAny.actions.register === 'function') {
+-                        for (const a of actions)
+-                            svcAny.actions.register(a);
+-                    }
+-                    else {
+-                        throw new Error('no action registry available');
+-                    }
+-                    logger.info('WorkflowModule - registered PaymentsV1 actions');
+-                }
+-                catch (_e) {
+-                    // swallow
+-                }
+-            }
+-        }
+-        catch {
+-            /* optional dependency */
+-        }
+-        // Optional: map payments events → workflow events (guarded if payments not installed)
+-        if (this.config.enablePaymentsEventMapping)
+-            try {
+-                let PaymentsEventTypes;
+-                try {
+-                    ;
+-                    ({ PaymentsEventTypes } = require('@credo-ts/payments'));
+-                }
+-                catch {
+-                    /* optional dependency */
+-                }
+-                if (!PaymentsEventTypes) {
+-                    try {
+-                        ;
+-                        ({ PaymentsEventTypes } = require('@credo-ts/payments/events/PaymentEvents'));
+-                    }
+-                    catch {
+-                        /* optional dependency */
+-                    }
+-                }
+-                if (!PaymentsEventTypes) {
+-                    try {
+-                        ;
+-                        ({ PaymentsEventTypes } = require('@credo-ts/payments/events/PaymentEvents'));
+-                    }
+-                    catch {
+-                        /* optional dependency */
+-                    }
+-                }
+-                if (!PaymentsEventTypes)
+-                    return;
+-                const adv = async (threadId, event, metadata) => {
+-                    const scoped = await resolveEventContext(metadata);
+-                    if (!scoped)
+-                        return;
+-                    try {
+-                        await service.advance(scoped.context, {
+-                            instance_id: threadId,
+-                            event,
+-                            idempotency_key: `auto:payments:${event}:${threadId}`,
+-                        });
+-                    }
+-                    catch (e) {
+-                        logger.debug(`[Workflow] payments event advance error: ${e.message}`);
+-                    }
+-                    finally {
+-                        await scoped.release();
+-                    }
+-                };
+-                const on = (evt, cb) => events.on?.(evt, cb);
+-                if (PaymentsEventTypes.IntroResponded)
+-                    on(PaymentsEventTypes.IntroResponded, async (e) => {
+-                        const th = e?.payload?.threadId;
+-                        if (th)
+-                            await adv(th, 'payments.methods_received', e?.metadata);
+-                    });
+-                if (PaymentsEventTypes.HandshakeAccepted)
+-                    on(PaymentsEventTypes.HandshakeAccepted, async (e) => {
+-                        const th = e?.payload?.threadId;
+-                        if (th)
+-                            await adv(th, 'payments.handshake_accepted', e?.metadata);
+-                    });
+-                if (PaymentsEventTypes.ComplianceRequired)
+-                    on(PaymentsEventTypes.ComplianceRequired, async (e) => {
+-                        const th = e?.payload?.threadId;
+-                        if (th)
+-                            await adv(th, 'payments.compliance_required', e?.metadata);
+-                    });
+-                if (PaymentsEventTypes.ComplianceSatisfied)
+-                    on(PaymentsEventTypes.ComplianceSatisfied, async (e) => {
+-                        const th = e?.payload?.threadId;
+-                        if (th)
+-                            await adv(th, 'payments.compliance_satisfied', e?.metadata);
+-                    });
+-                if (PaymentsEventTypes.ComplianceRejected)
+-                    on(PaymentsEventTypes.ComplianceRejected, async (e) => {
+-                        const th = e?.payload?.threadId;
+-                        if (th)
+-                            await adv(th, 'payments.compliance_rejected', e?.metadata);
+-                    });
+-                if (PaymentsEventTypes.SettlementUpdated)
+-                    on(PaymentsEventTypes.SettlementUpdated, async (e) => {
+-                        const p = e?.payload;
+-                        const th = p?.threadId;
+-                        const status = p?.status;
+-                        if (!status)
+-                            return;
+-                        const map = {
+-                            received: 'payments.receipt_received',
+-                            pending: 'payments.settlement_pending',
+-                            settled: 'payments.settled',
+-                            failed: 'payments.failed',
+-                        };
+-                        const ev = map[status];
+-                        if (ev && th)
+-                            await adv(th, ev, e?.metadata);
+-                    });
+-                logger.info('WorkflowModule - registered Payments event listeners');
+-            }
+-            catch {
+-                /* optional dependency */
+-            }
+-        // Optional: register POE v1 actions when POE module is available
+-        try {
+-            let createPoeV1Actions;
+-            try {
+-                ;
+-                ({ createPoeV1Actions } = require('@ajna-inc/poe'));
+-            }
+-            catch {
+-                /* optional dependency */
+-            }
+-            if (!createPoeV1Actions) {
+-                try {
+-                    ;
+-                    ({ createPoeV1Actions } = require('@ajna-inc/poe/workflow/PoeV1Actions'));
+-                }
+-                catch {
+-                    /* optional dependency */
+-                }
+-            }
+-            if (createPoeV1Actions) {
+-                const actions = createPoeV1Actions();
+-                try {
+-                    const svcAny = service;
+-                    if (typeof svcAny.registerActions === 'function') {
+-                        svcAny.registerActions(actions);
+-                    }
+-                    else if (svcAny.actions && typeof svcAny.actions.register === 'function') {
+-                        for (const a of actions)
+-                            svcAny.actions.register(a);
+-                    }
+-                    else {
+-                        throw new Error('no action registry available');
+-                    }
+-                    logger.info('WorkflowModule - registered PoeV1 actions');
+-                }
+-                catch (_e) {
+-                    // swallow
+-                }
+-            }
+-        }
+-        catch {
+-            /* optional dependency */
+-        }
+-        // Optional: map POE events → workflow events (guarded if POE not installed)
+-        if (this.config.enablePoeEventMapping)
+-            try {
+-                let PoeEventTypes;
+-                let PoeState;
+-                try {
+-                    ;
+-                    ({ PoeEventTypes, PoeState } = require('@ajna-inc/poe'));
+-                }
+-                catch {
+-                    /* optional dependency */
+-                }
+-                if (!PoeEventTypes || !PoeState)
+-                    return;
+-                const on = (evt, cb) => events.on?.(evt, cb);
+-                if (PoeEventTypes.PoeStateChanged)
+-                    on(PoeEventTypes.PoeStateChanged, async (e) => {
+-                        const poeRecord = e?.payload?.poeRecord;
+-                        const connectionId = poeRecord?.connectionId;
+-                        if (!connectionId)
+-                            return;
+-                        const scoped = await resolveEventContext(e?.metadata);
+-                        if (!scoped)
+-                            return;
+-                        try {
+-                            let workflowEvent;
+-                            switch (poeRecord.state) {
+-                                case PoeState?.RequestReceived:
+-                                    workflowEvent = 'poe.request_received';
+-                                    break;
+-                                case PoeState?.SubmitReceived:
+-                                    workflowEvent = poeRecord.verificationResult?.verified
+-                                        ? 'poe.verified'
+-                                        : 'poe.verification_failed';
+-                                    break;
+-                                case PoeState?.ProposalReceived:
+-                                    workflowEvent = 'poe.proposal_received';
+-                                    break;
+-                                case PoeState?.Accepted:
+-                                    workflowEvent = 'poe.accepted';
+-                                    break;
+-                                case PoeState?.Declined:
+-                                    workflowEvent = 'poe.declined';
+-                                    break;
+-                                case PoeState?.Complete:
+-                                    workflowEvent = 'poe.completed';
+-                                    break;
+-                                case PoeState?.Problem:
+-                                    workflowEvent = 'poe.problem';
+-                                    break;
+-                                case PoeState?.ChallengeReceived:
+-                                    workflowEvent = 'poe.challenge_received';
+-                                    break;
+-                            }
+-                            if (workflowEvent) {
+-                                await service.autoAdvanceByConnection(scoped.context, connectionId, workflowEvent);
+-                            }
+-                        }
+-                        catch (err) {
+-                            logger.debug(`[Workflow] POE event advance error: ${err.message}`);
+-                        }
+-                        finally {
+-                            await scoped.release();
+-                        }
+-                    });
+-                logger.info('WorkflowModule - registered POE event listeners');
+-            }
+-            catch {
+-                /* optional dependency */
+-            }
++        // Payments integration disabled for React Native compatibility
++        // The payments module has Node.js dependencies (ethers, ws) that don't work with Metro bundler
++        logger.debug('WorkflowModule - payments integration disabled for React Native');
+         // Initialize persistent command queue (always enabled, no Redis needed)
+         logger.info('WorkflowModule - initializing persistent command queue');
+         const commandRepo = dm.resolve(WorkflowCommandRepository_1.WorkflowCommandRepository);

@@ -1,0 +1,86 @@
+diff --git a/build/services/IntegrityService.js b/build/services/IntegrityService.js
+index fba76f9e5a3120e3f836866156e889f2ce8430b5..b6120a937d92f97d63eeb65427898ca246bf62c3 100644
+--- a/build/services/IntegrityService.js
++++ b/build/services/IntegrityService.js
+@@ -5,13 +5,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
+     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+     return c > 3 && r && Object.defineProperty(target, key, r), r;
+ };
+-var __importDefault = (this && this.__importDefault) || function (mod) {
+-    return (mod && mod.__esModule) ? mod : { "default": mod };
+-};
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.IntegrityService = void 0;
+ const core_1 = require("@credo-ts/core");
+-const crypto_1 = __importDefault(require("crypto"));
+ // Minimal JCS canonicalize: stable stringify with key sorting
+ function canonicalize(value) {
+     if (value === null || typeof value !== 'object')
+@@ -22,11 +18,16 @@ function canonicalize(value) {
+     const obj = entries.map(([k, v]) => `${JSON.stringify(k)}:${canonicalize(v)}`).join(',');
+     return `{${obj}}`;
+ }
++// Base64url encoding helper
++function toBase64Url(data) {
++    const base64 = core_1.TypedArrayEncoder.toBase64(data);
++    return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
++}
+ let IntegrityService = class IntegrityService {
+     computeTermsHash(terms) {
+         const canonical = canonicalize(terms);
+-        const digest = crypto_1.default.createHash('sha256').update(canonical).digest();
+-        return digest.toString('base64url');
++        const digest = core_1.Hasher.hash(core_1.TypedArrayEncoder.fromString(canonical), 'sha-256');
++        return toBase64Url(digest);
+     }
+     verifyTermsHash(terms, expected) {
+         const computed = this.computeTermsHash(terms);
+diff --git a/build/services/PaymentsService.js b/build/services/PaymentsService.js
+index 24c07d0b33afb32055d10bb5859e7a993c5d81f9..76c59706f5e815a9bd61ecff95df58fbf6a81c1d 100644
+--- a/build/services/PaymentsService.js
++++ b/build/services/PaymentsService.js
+@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.PaymentsService = void 0;
+ const core_1 = require("@credo-ts/core");
+-const crypto_1 = require("crypto");
+ const LedgerRouter_1 = require("../ledger/LedgerRouter");
+ const PaymentsRepository_1 = require("../repository/PaymentsRepository");
+ let PaymentsService = class PaymentsService {
+@@ -28,23 +27,23 @@ let PaymentsService = class PaymentsService {
+     }
+     createQueryMethods(opts) {
+         return {
+-            id: (0, crypto_1.randomUUID)(),
++            id: core_1.utils.uuid(),
+             type: 'https://didcomm.org/payments/1.0/query-methods',
+             body: { want: opts.want, meta: opts.meta },
+         };
+     }
+     createMethodsResponse(thid, body) {
+         return {
+-            id: (0, crypto_1.randomUUID)(),
++            id: core_1.utils.uuid(),
+             type: 'https://didcomm.org/payments/1.0/methods',
+             thid,
+             body,
+         };
+     }
+     createHandshakeRequest(payload) {
+-        const sessionId = payload.sessionThid ?? `ps_${(0, crypto_1.randomUUID)()}`;
++        const sessionId = payload.sessionThid ?? `ps_${core_1.utils.uuid()}`;
+         return {
+-            id: (0, crypto_1.randomUUID)(),
++            id: core_1.utils.uuid(),
+             type: 'https://didcomm.org/payments/1.0/handshake-request',
+             thid: sessionId,
+             to: [payload.toDid],
+@@ -64,7 +63,7 @@ let PaymentsService = class PaymentsService {
+     }
+     acceptHandshake(thid, selection) {
+         return {
+-            id: (0, crypto_1.randomUUID)(),
++            id: core_1.utils.uuid(),
+             type: 'https://didcomm.org/payments/1.0/handshake-accept',
+             thid,
+             body: { session: { id: thid }, selected: selection },
