@@ -1,0 +1,19 @@
+diff --git a/src/commonjs/index.js b/src/commonjs/index.js
+index 7578f68383d74ba89d702d7ce4a983ed29a4af94..d2459d870cfdb62de230fdcef1d0ffd718670bdb 100644
+--- a/src/commonjs/index.js
++++ b/src/commonjs/index.js
+@@ -5,10 +5,12 @@ const NativeScreenGuard = TurboModuleRegistry.get('ScreenGuard');
+ const NativeSGScreenshot = TurboModuleRegistry.get('SGScreenshot');
+ const NativeSGScreenRecord = TurboModuleRegistry.get('SGScreenRecord');
+ 
+-var screenShotEmitter = new NativeEventEmitter(NativeSGScreenshot);
++// RN 0.77+ requires a non-null native module for NativeEventEmitter on iOS
++// Only create emitters if the native modules are available
++var screenShotEmitter = NativeSGScreenshot ? new NativeEventEmitter(NativeSGScreenshot) : null;
+ var screenshotSubscription = null;
+ var screenRecordingSubscription = null;
+-var screenRecordingEmitter = new NativeEventEmitter(NativeSGScreenRecord);
++var screenRecordingEmitter = NativeSGScreenRecord ? new NativeEventEmitter(NativeSGScreenRecord) : null;
+ 
+ export default {
+     /**

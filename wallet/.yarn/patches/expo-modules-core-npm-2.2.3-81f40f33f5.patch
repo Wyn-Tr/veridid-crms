@@ -1,0 +1,14 @@
+diff --git a/android/CMakeLists.txt b/android/CMakeLists.txt
+index 65742646e6f93d273279a0c03736683198bee0b2..e04aec72b35608d5b750c4fc4a34d87d9cbf1806 100644
+--- a/android/CMakeLists.txt
++++ b/android/CMakeLists.txt
+@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD 20)
+ set(PACKAGE_NAME "expo-modules-core")
+ set(BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
+ 
++# Enable 16KB page alignment for Android 15+ compatibility
++set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
++
+ string(APPEND CMAKE_CXX_FLAGS " -DREACT_NATIVE_TARGET_VERSION=${REACT_NATIVE_TARGET_VERSION}")
+ 
+ if (${NATIVE_DEBUG})
