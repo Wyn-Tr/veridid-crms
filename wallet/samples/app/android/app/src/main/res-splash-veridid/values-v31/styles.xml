@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+ splash: VeriDID-only (ESSI builds omit this overlay → system uses launcher icon like master). -->
+    <style name="AppTheme" parent="AppThemeBase">
+        <item name="android:windowSplashScreenBackground">@android:color/transparent</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_window_icon</item>
+    </style>
+</resources>

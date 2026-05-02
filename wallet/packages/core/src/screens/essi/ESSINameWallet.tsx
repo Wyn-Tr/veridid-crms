@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, TextInput, Alert } from 'react-native'
 import FeatherIcon from 'react-native-vector-icons/Feather'
@@ -7,10 +7,76 @@ import { ESSIScreen, ESSIButton } from '../../components/essi'
 import { DispatchAction } from '../../contexts/reducers/store'
 import { useStore } from '../../contexts/store'
 import { testIdWithKey } from '../../utils/testable'
-import { palette, spacing, typography, radius } from '../../theme/essi'
+import { spacing, typography, radius } from '../../theme/essi'
+import { useWalletVisualPalette } from '../../theme/essi'
+
+function buildStyles(p: ReturnType<typeof useWalletVisualPalette>) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'space-between',
+    },
+    content: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+    },
+    iconContainer: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      backgroundColor: `${p.primary}33`,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.xl,
+    },
+    title: {
+      ...typography.headline,
+      color: p.text,
+      textAlign: 'center',
+      marginBottom: spacing.sm,
+    },
+    description: {
+      ...typography.body,
+      color: p.muted,
+      textAlign: 'center',
+      marginBottom: spacing.xl,
+      paddingHorizontal: spacing.md,
+    },
+    inputContainer: {
+      width: '100%',
+      marginBottom: spacing.md,
+    },
+    input: {
+      backgroundColor: p.surfaceSecondary,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: p.outline,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      ...typography.body,
+      color: p.text,
+      textAlign: 'center',
+      fontSize: 18,
+    },
+    charCount: {
+      ...typography.caption,
+      color: p.muted,
+      textAlign: 'right',
+      marginTop: spacing.xs,
+      paddingRight: spacing.xs,
+    },
+    buttonContainer: {
+      paddingTop: spacing.md,
+    },
+  })
+}
 
 const ESSINameWallet: React.FC = () => {
   const { t } = useTranslation()
+  const palette = useWalletVisualPalette()
+  const styles = useMemo(() => buildStyles(palette), [palette])
   const [store, dispatch] = useStore()
   const [walletName, setWalletName] = useState('')
   const [loading, setLoading] = useState(false)
@@ -97,66 +163,5 @@ const ESSINameWallet: React.FC = () => {
     </ESSIScreen>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-  },
-  iconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: palette.primary + '20',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xl,
-  },
-  title: {
-    ...typography.headline,
-    color: palette.text,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  description: {
-    ...typography.body,
-    color: palette.muted,
-    textAlign: 'center',
-    marginBottom: spacing.xl,
-    paddingHorizontal: spacing.md,
-  },
-  inputContainer: {
-    width: '100%',
-    marginBottom: spacing.md,
-  },
-  input: {
-    backgroundColor: palette.surfaceSecondary,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: palette.outline,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    ...typography.body,
-    color: palette.text,
-    textAlign: 'center',
-    fontSize: 18,
-  },
-  charCount: {
-    ...typography.caption,
-    color: palette.muted,
-    textAlign: 'right',
-    marginTop: spacing.xs,
-    paddingRight: spacing.xs,
-  },
-  buttonContainer: {
-    paddingTop: spacing.md,
-  },
-})
 
 export default ESSINameWallet

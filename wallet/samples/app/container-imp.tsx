@@ -1,4 +1,4 @@
-import { BifoldLogger, Container, TokenMapping, TOKENS } from '@bifold/core'
+import { BifoldLogger, Container, TokenMapping, TOKENS, setWalletThemeDevResolver } from '@bifold/core'
 import { DependencyContainer } from 'tsyringe'
 import { Screens } from '../../packages/core/src/types/navigators'
 import ESSITabStack from '../../packages/core/src/navigators/ESSITabStack'
@@ -10,7 +10,22 @@ import ESSITerms from '../../packages/core/src/screens/essi/ESSITerms'
 import ESSIBiometry from '../../packages/core/src/screens/essi/ESSIBiometry'
 import ESSIChat from '../../packages/core/src/screens/essi/ESSIChat'
 import ESSICredentialOfferAccept from '../../packages/core/src/screens/essi/ESSICredentialOfferAccept'
+import { WALLET_THEME as WALLET_THEME_FROM_ENV } from '@env'
 import Config from 'react-native-config'
+import { resolveWalletTheme, sanitizeWalletThemeEnv } from './theme'
+
+/** Prefer Metro-inlined `.env` so `WALLET_THEME` updates without a native rebuild; else react-native-config. */
+function pickWalletThemeRaw(): string | undefined {
+  const bundled = sanitizeWalletThemeEnv(WALLET_THEME_FROM_ENV)
+  if (bundled !== '' && bundled !== 'undefined') {
+    return bundled
+  }
+  const native = sanitizeWalletThemeEnv(Config.WALLET_THEME as string | undefined)
+  if (native !== '' && native !== 'undefined') {
+    return Config.WALLET_THEME as string | undefined
+  }
+  return undefined
+}
 
 export class AppContainer implements Container {
   private _container: DependencyContainer
@@ -39,6 +54,18 @@ export class AppContainer implements Container {
     this.container.registerInstance(TOKENS.SCREEN_BIOMETRY, ESSIBiometry)
     this.container.registerInstance(TOKENS.SCREEN_CHAT, ESSIChat)
     this.container.registerInstance(TOKENS.COMPONENT_CREDENTIAL_OFFER_ACCEPT, ESSICredentialOfferAccept)
+    const rawTheme = pickWalletThemeRaw()
+    const envTheme = sanitizeWalletThemeEnv(rawTheme)
+    const walletTheme = resolveWalletTheme(envTheme === '' ? undefined : envTheme)
+    this.log?.info(
+      `WALLET_THEME bundled="${String(WALLET_THEME_FROM_ENV ?? '')}" native="${String(Config.WALLET_THEME ?? '')}" → sanitized="${envTheme}" themeName=${walletTheme.themeName}`
+    )
+    this.container.registerInstance(TOKENS.OBJECT_THEME, walletTheme)
+
+    setWalletThemeDevResolver((raw: string | undefined) => {
+      const id = sanitizeWalletThemeEnv(raw)
+      return resolveWalletTheme(id === '' ? undefined : id)
+    })
 
     const defaultConfig = this.container.resolve(TOKENS.CONFIG)
     const useWebrtcTunnel = String(Config.USE_WEBRTC_TUNNEL).toLowerCase() === 'true'

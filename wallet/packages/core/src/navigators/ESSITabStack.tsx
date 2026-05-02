@@ -2,7 +2,7 @@ import { useAgent } from '@credo-ts/react-hooks'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useEffect } from 'react'
+import React, { useCallback, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Text, StyleSheet, DeviceEventEmitter } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -16,7 +16,7 @@ import { BifoldError } from '../types/error'
 import { TabStackParams, TabStacks } from '../types/navigators'
 import { connectFromScanOrDeepLink } from '../utils/helpers'
 import { testIdWithKey } from '../utils/testable'
-import { palette } from '../theme/essi'
+import { useWalletVisualPalette } from '../theme/essi'
 
 import ESSICredentialStack from './ESSICredentialStack'
 import ESSIHomeStack from './ESSIHomeStack'
@@ -26,6 +26,40 @@ import ESSISettingStack from './ESSISettingStack'
 const Tab = createBottomTabNavigator<TabStackParams>()
 
 const ESSITabStack: React.FC = () => {
+  const palette = useWalletVisualPalette()
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: palette.background,
+        },
+        tabBar: {
+          backgroundColor: palette.surfaceSecondary,
+          borderTopWidth: 1,
+          borderTopColor: palette.outline,
+          height: 72,
+          paddingBottom: 12,
+          paddingTop: 8,
+        },
+        tabBarLabel: {
+          fontSize: 12,
+        },
+        tabBarBadge: {
+          backgroundColor: palette.danger,
+          color: palette.text,
+          fontSize: 12,
+          fontWeight: '600',
+          minWidth: 20,
+          height: 20,
+        },
+        bottomSafeArea: {
+          backgroundColor: palette.surfaceSecondary,
+        },
+      }),
+    [palette]
+  )
+
   const { t } = useTranslation()
   const [store, dispatch] = useStore()
   const { agent } = useAgent()
@@ -149,34 +183,5 @@ const ESSITabStack: React.FC = () => {
     </SafeAreaView>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.background,
-  },
-  tabBar: {
-    backgroundColor: palette.surface,
-    borderTopWidth: 1,
-    borderTopColor: palette.outline,
-    height: 72,
-    paddingBottom: 12,
-    paddingTop: 8,
-  },
-  tabBarLabel: {
-    fontSize: 12,
-  },
-  tabBarBadge: {
-    backgroundColor: palette.danger,
-    color: palette.text,
-    fontSize: 12,
-    fontWeight: '600',
-    minWidth: 20,
-    height: 20,
-  },
-  bottomSafeArea: {
-    backgroundColor: palette.surface,
-  },
-})
 
 export default ESSITabStack

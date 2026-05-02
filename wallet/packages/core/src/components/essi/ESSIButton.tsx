@@ -1,6 +1,8 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Pressable, Text, StyleSheet, ActivityIndicator } from 'react-native'
-import { palette, radius, spacing, typography } from '../../theme/essi'
+
+import { radius, spacing, typography } from '../../theme/essi'
+import { useWalletVisualPalette } from '../../theme/essi'
 
 interface ESSIButtonProps {
   title?: string
@@ -14,6 +16,64 @@ interface ESSIButtonProps {
   style?: any
 }
 
+function buildButtonStyles(p: ReturnType<typeof useWalletVisualPalette>) {
+  return StyleSheet.create({
+    button: {
+      borderRadius: radius.lg,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 56,
+    },
+    primary: {
+      backgroundColor: p.primary,
+    },
+    secondary: {
+      backgroundColor: p.surfaceSecondary,
+    },
+    outline: {
+      backgroundColor: 'transparent',
+      borderWidth: 1,
+      borderColor: p.outline,
+    },
+    danger: {
+      backgroundColor: p.danger,
+    },
+    ghost: {
+      backgroundColor: 'transparent',
+    },
+    fullWidth: {
+      width: '100%',
+    },
+    disabled: {
+      opacity: 0.5,
+    },
+    pressed: {
+      opacity: 0.8,
+    },
+    text: {
+      ...typography.bodyBold,
+      textAlign: 'center',
+    },
+    primaryText: {
+      color: p.buttonText,
+    },
+    secondaryText: {
+      color: p.text,
+    },
+    outlineText: {
+      color: p.primary,
+    },
+    dangerText: {
+      color: p.buttonText,
+    },
+    ghostText: {
+      color: p.muted,
+    },
+  })
+}
+
 export const ESSIButton: React.FC<ESSIButtonProps> = ({
   title,
   children,
@@ -25,6 +85,8 @@ export const ESSIButton: React.FC<ESSIButtonProps> = ({
   testID,
   style,
 }) => {
+  const palette = useWalletVisualPalette()
+  const styles = useMemo(() => buildButtonStyles(palette), [palette])
   const displayText = children || title
 
   return (
@@ -42,66 +104,10 @@ export const ESSIButton: React.FC<ESSIButtonProps> = ({
       disabled={disabled || loading}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'outline' || variant === 'ghost' ? palette.primary : palette.text} />
+        <ActivityIndicator color={variant === 'outline' || variant === 'ghost' ? palette.primary : palette.buttonText} />
       ) : (
         <Text style={[styles.text, styles[`${variant}Text`]]}>{displayText}</Text>
       )}
     </Pressable>
   )
 }
-
-const styles = StyleSheet.create({
-  button: {
-    borderRadius: radius.lg,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 56,
-  },
-  primary: {
-    backgroundColor: palette.primary,
-  },
-  secondary: {
-    backgroundColor: palette.surfaceSecondary,
-  },
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: palette.outline,
-  },
-  danger: {
-    backgroundColor: palette.danger,
-  },
-  ghost: {
-    backgroundColor: 'transparent',
-  },
-  fullWidth: {
-    width: '100%',
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  pressed: {
-    opacity: 0.8,
-  },
-  text: {
-    ...typography.bodyBold,
-    textAlign: 'center',
-  },
-  primaryText: {
-    color: palette.text,
-  },
-  secondaryText: {
-    color: palette.text,
-  },
-  outlineText: {
-    color: palette.primary,
-  },
-  dangerText: {
-    color: palette.text,
-  },
-  ghostText: {
-    color: palette.muted,
-  },
-})

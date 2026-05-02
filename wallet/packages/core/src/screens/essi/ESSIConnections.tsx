@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { View, Text, StyleSheet, Pressable, FlatList } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -8,7 +8,8 @@ import { useConnections } from '@credo-ts/react-hooks'
 import { ConnectionType, DidExchangeState } from '@credo-ts/core'
 
 import { ESSIScreen, ESSIInfoCard } from '../../components/essi'
-import { palette, radius, spacing, typography } from '../../theme/essi'
+import { radius, spacing, typography } from '../../theme/essi'
+import { useWalletVisualPalette, type WalletVisualPalette } from '../../theme/essi'
 import { ContactStackParams, Screens, Stacks } from '../../types/navigators'
 import { testIdWithKey } from '../../utils/testable'
 import { formatTime } from '../../utils/helpers'
@@ -20,9 +21,15 @@ interface ConnectionItemProps {
   state: DidExchangeState
   onPress: () => void
   testID?: string
+  palette: WalletVisualPalette
+  styles: ReturnType<typeof buildConnectionStyles>
 }
 
-const getStateInfo = (state: DidExchangeState, t: (key: string) => string): { color: string; label: string; icon: string } => {
+const getStateInfo = (
+  state: DidExchangeState,
+  t: (key: string) => string,
+  palette: WalletVisualPalette
+): { color: string; label: string; icon: string } => {
   switch (state) {
     case DidExchangeState.Completed:
       return { color: palette.success, label: t('Contacts.StateConnected'), icon: 'check-circle' }
@@ -41,15 +48,96 @@ const getStateInfo = (state: DidExchangeState, t: (key: string) => string): { co
   }
 }
 
-const ConnectionItem: React.FC<ConnectionItemProps> = ({ name, createdAt, state, onPress, testID }) => {
+function buildConnectionStyles(palette: WalletVisualPalette) {
+  return StyleSheet.create({
+    headerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: spacing.gutter,
+    },
+    emptyHint: {
+      ...typography.body,
+      color: palette.muted,
+      textAlign: 'center',
+      marginTop: spacing.lg,
+    },
+    listContainer: {
+      paddingHorizontal: spacing.gutter,
+      paddingVertical: spacing.md,
+    },
+    connectionItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: palette.surfaceSecondary,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      gap: spacing.md,
+    },
+    connectionAvatar: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: palette.card,
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative',
+    },
+    stateIndicator: {
+      position: 'absolute',
+      bottom: 0,
+      right: 0,
+      width: 14,
+      height: 14,
+      borderRadius: 7,
+      borderWidth: 2,
+      borderColor: palette.surfaceSecondary,
+    },
+    connectionInfo: {
+      flex: 1,
+    },
+    connectionName: {
+      ...typography.bodyBold,
+      color: palette.text,
+      marginBottom: spacing.xxs,
+    },
+    connectionMeta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    stateContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    stateText: {
+      ...typography.caption,
+      fontWeight: '500',
+    },
+    connectionDate: {
+      ...typography.caption,
+      color: palette.muted,
+    },
+    separator: {
+      height: spacing.sm,
+    },
+  })
+}
+
+const ConnectionItem: React.FC<ConnectionItemProps> = ({ name, createdAt, state, onPress, testID, palette, styles }) => {
   const { t } = useTranslation()
-  const stateInfo = getStateInfo(state, t)
+  const stateInfo = getStateInfo(state, t, palette)
 
   return (
     <Pressable style={styles.connectionItem} onPress={onPress} testID={testID}>
       <View style={styles.connectionAvatar}>
         <FeatherIcon name="user" size={24} color={palette.text} />
-        {/* State indicator dot */}
         <View style={[styles.stateIndicator, { backgroundColor: stateInfo.color }]} />
       </View>
       <View style={styles.connectionInfo}>
@@ -70,12 +158,12 @@ const ConnectionItem: React.FC<ConnectionItemProps> = ({ name, createdAt, state,
 const ESSIConnections: React.FC = () => {
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<ContactStackParams>>()
+  const palette = useWalletVisualPalette()
+  const styles = useMemo(() => buildConnectionStyles(palette), [palette])
   const { records: allConnections } = useConnections()
 
-  // Filter out mediator connections
-  const connections = allConnections?.filter(
-    (conn) => !conn.connectionTypes?.includes(ConnectionType.Mediator)
-  ) || []
+  const connections =
+    allConnections?.filter((conn) => !conn.connectionTypes?.includes(ConnectionType.Mediator)) || []
 
   const handleScanPress = () => {
     navigation.navigate(Stacks.ConnectStack as any, { screen: Screens.Scan })
@@ -119,6 +207,8 @@ const ESSIConnections: React.FC = () => {
       state={item.state as DidExchangeState}
       onPress={() => handleConnectionPress(item.id)}
       testID={testIdWithKey(`Connection-${item.id}`)}
+      palette={palette}
+      styles={styles}
     />
   )
 
@@ -127,18 +217,10 @@ const ESSIConnections: React.FC = () => {
       headerTitle={t('Screens.Contacts')}
       headerRight={
         <View style={styles.headerActions}>
-          <Pressable
-            onPress={handleCreateInvitePress}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            testID={testIdWithKey('CreateInviteButton')}
-          >
+          <Pressable onPress={handleCreateInvitePress} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} testID={testIdWithKey('CreateInviteButton')}>
             <FeatherIcon name="user-plus" size={22} color={palette.text} />
           </Pressable>
-          <Pressable
-            onPress={handleScanPress}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            testID={testIdWithKey('ScanButton')}
-          >
+          <Pressable onPress={handleScanPress} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} testID={testIdWithKey('ScanButton')}>
             <FeatherIcon name="camera" size={22} color={palette.text} />
           </Pressable>
         </View>
@@ -161,85 +243,5 @@ const ESSIConnections: React.FC = () => {
     </ESSIScreen>
   )
 }
-
-const styles = StyleSheet.create({
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.gutter,
-  },
-  emptyHint: {
-    ...typography.body,
-    color: palette.muted,
-    textAlign: 'center',
-    marginTop: spacing.lg,
-  },
-  listContainer: {
-    paddingHorizontal: spacing.gutter,
-    paddingVertical: spacing.md,
-  },
-  connectionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: palette.surfaceSecondary,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    gap: spacing.md,
-  },
-  connectionAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: palette.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  stateIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    borderWidth: 2,
-    borderColor: palette.surfaceSecondary,
-  },
-  connectionInfo: {
-    flex: 1,
-  },
-  connectionName: {
-    ...typography.bodyBold,
-    color: palette.text,
-    marginBottom: spacing.xxs,
-  },
-  connectionMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  stateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  stateText: {
-    ...typography.caption,
-    fontWeight: '500',
-  },
-  connectionDate: {
-    ...typography.caption,
-    color: palette.muted,
-  },
-  separator: {
-    height: spacing.sm,
-  },
-})
 
 export default ESSIConnections

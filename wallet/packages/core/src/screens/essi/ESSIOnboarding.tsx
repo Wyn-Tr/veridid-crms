@@ -1,11 +1,12 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useMemo } from 'react'
 import { View, Text, StyleSheet, FlatList, Dimensions, Pressable } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
 import FeatherIcon from 'react-native-vector-icons/Feather'
 
 import { ESSIButton, ESSIProgressDots } from '../../components/essi'
-import { palette, spacing, typography } from '../../theme/essi'
+import { spacing, typography } from '../../theme/essi'
+import { useWalletVisualPalette, type WalletVisualPalette } from '../../theme/essi'
 import { testIdWithKey } from '../../utils/testable'
 import { useStore } from '../../contexts/store'
 import { DispatchAction } from '../../contexts/reducers/store'
@@ -19,10 +20,66 @@ interface OnboardingSlide {
   description: string
 }
 
+function buildOnboardingStyles(p: WalletVisualPalette) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: p.background,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      paddingHorizontal: spacing.gutter,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.md,
+    },
+    skipText: {
+      ...typography.body,
+      color: p.muted,
+    },
+    slide: {
+      width,
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: spacing.gutter,
+    },
+    iconContainer: {
+      width: 160,
+      height: 160,
+      borderRadius: 80,
+      backgroundColor: p.surfaceSecondary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.xl,
+    },
+    title: {
+      ...typography.title,
+      color: p.text,
+      textAlign: 'center',
+      marginBottom: spacing.md,
+    },
+    description: {
+      ...typography.body,
+      color: p.muted,
+      textAlign: 'center',
+      lineHeight: 24,
+      maxWidth: 320,
+    },
+    footer: {
+      paddingHorizontal: spacing.gutter,
+      paddingBottom: spacing.xl,
+      gap: spacing.xl,
+    },
+  })
+}
+
 const ESSIOnboarding: React.FC = () => {
   const { t } = useTranslation()
   const [, dispatch] = useStore()
   const flatListRef = useRef<FlatList>(null)
+  const palette = useWalletVisualPalette()
+  const styles = useMemo(() => buildOnboardingStyles(palette), [palette])
 
   const [currentIndex, setCurrentIndex] = useState(0)
 
@@ -69,7 +126,6 @@ const ESSIOnboarding: React.FC = () => {
   }
 
   const handleGetStarted = () => {
-    // Dispatch tutorial completion - OnboardingStack will handle navigation
     dispatch({
       type: DispatchAction.DID_COMPLETE_TUTORIAL,
     })
@@ -130,57 +186,5 @@ const ESSIOnboarding: React.FC = () => {
     </SafeAreaView>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.background,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingHorizontal: spacing.gutter,
-    paddingTop: spacing.md, // SafeAreaView handles status bar padding
-    paddingBottom: spacing.md,
-  },
-  skipText: {
-    ...typography.body,
-    color: palette.muted,
-  },
-  slide: {
-    width,
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.gutter,
-  },
-  iconContainer: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: palette.surfaceSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xl,
-  },
-  title: {
-    ...typography.title,
-    color: palette.text,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-  },
-  description: {
-    ...typography.body,
-    color: palette.muted,
-    textAlign: 'center',
-    lineHeight: 24,
-    maxWidth: 320,
-  },
-  footer: {
-    paddingHorizontal: spacing.gutter,
-    paddingBottom: spacing.xl,
-    gap: spacing.xl,
-  },
-})
 
 export default ESSIOnboarding

@@ -1,11 +1,12 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
 import FeatherIcon from 'react-native-vector-icons/Feather'
 
 import { ESSIButton } from '../../components/essi'
-import { palette, spacing, typography, radius } from '../../theme/essi'
+import { spacing, typography, radius } from '../../theme/essi'
+import { useWalletVisualPalette } from '../../theme/essi'
 import { testIdWithKey } from '../../utils/testable'
 import { useStore } from '../../contexts/store'
 import { DispatchAction } from '../../contexts/reducers/store'
@@ -17,8 +18,118 @@ type TermsSection = {
   body: string
 }
 
+function buildStyles(p: ReturnType<typeof useWalletVisualPalette>) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: p.background,
+    },
+    header: {
+      paddingHorizontal: spacing.gutter,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.md,
+    },
+    headerTitle: {
+      ...typography.title,
+      color: p.text,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: spacing.gutter,
+      paddingBottom: spacing.xxl,
+      gap: spacing.lg,
+    },
+    introCard: {
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: p.outline,
+      backgroundColor: p.surfaceSecondary,
+      padding: spacing.lg,
+      gap: spacing.sm,
+    },
+    introBold: {
+      ...typography.bodyBold,
+      color: p.text,
+    },
+    introBody: {
+      ...typography.body,
+      color: p.muted,
+      lineHeight: 22,
+    },
+    callout: {
+      ...typography.bodyBold,
+      color: p.text,
+    },
+    section: {
+      gap: spacing.xs,
+    },
+    sectionTitle: {
+      ...typography.bodyBold,
+      color: p.text,
+    },
+    sectionBody: {
+      ...typography.body,
+      color: p.muted,
+      lineHeight: 22,
+    },
+    closing: {
+      ...typography.body,
+      color: p.text,
+      lineHeight: 22,
+    },
+    notice: {
+      padding: spacing.md,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: p.primary,
+      backgroundColor: `${p.primary}18`,
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    noticeText: {
+      ...typography.body,
+      color: p.text,
+      flex: 1,
+      lineHeight: 22,
+    },
+    checkboxRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      marginTop: spacing.md,
+    },
+    checkbox: {
+      width: 28,
+      height: 28,
+      borderRadius: radius.sm,
+      borderWidth: 2,
+      borderColor: p.text,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkboxChecked: {
+      backgroundColor: p.primary,
+      borderColor: p.primary,
+    },
+    checkboxLabel: {
+      ...typography.body,
+      color: p.text,
+      flex: 1,
+    },
+    footer: {
+      paddingHorizontal: spacing.gutter,
+      paddingBottom: spacing.xl,
+      gap: spacing.md,
+    },
+  })
+}
+
 const ESSITerms: React.FC = () => {
   const { t } = useTranslation()
+  const palette = useWalletVisualPalette()
+  const styles = useMemo(() => buildStyles(palette), [palette])
   const [store, dispatch] = useStore()
   const agreedToPreviousTerms = store.onboarding.didAgreeToTerms
   const [accepted, setAccepted] = useState(!!agreedToPreviousTerms)
@@ -116,7 +227,7 @@ const ESSITerms: React.FC = () => {
 
         {/* Notice */}
         <View style={styles.notice}>
-          <FeatherIcon name="info" color={palette.text} size={20} />
+          <FeatherIcon name="info" color={palette.primary} size={20} />
           <Text style={styles.noticeText}>
             Please agree to the terms and conditions before using the ESSI Wallet application provided by Ajna Inc.
           </Text>
@@ -130,7 +241,7 @@ const ESSITerms: React.FC = () => {
             testID={testIdWithKey('AgreeCheckbox')}
           >
             <View style={[styles.checkbox, accepted && styles.checkboxChecked]}>
-              {accepted ? <FeatherIcon name="check" size={18} color={palette.text} /> : null}
+              {accepted ? <FeatherIcon name="check" size={18} color={palette.buttonText} /> : null}
             </View>
             <Text style={styles.checkboxLabel}>I have read, understand and accept the terms and conditions.</Text>
           </Pressable>
@@ -161,111 +272,5 @@ const ESSITerms: React.FC = () => {
     </SafeAreaView>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.background,
-  },
-  header: {
-    paddingHorizontal: spacing.gutter,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.md,
-  },
-  headerTitle: {
-    ...typography.title,
-    color: palette.text,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.gutter,
-    paddingBottom: spacing.xxl,
-    gap: spacing.lg,
-  },
-  introCard: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: palette.outline,
-    backgroundColor: palette.surfaceSecondary,
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  introBold: {
-    ...typography.bodyBold,
-    color: palette.text,
-  },
-  introBody: {
-    ...typography.body,
-    color: palette.muted,
-    lineHeight: 22,
-  },
-  callout: {
-    ...typography.bodyBold,
-    color: palette.text,
-  },
-  section: {
-    gap: spacing.xs,
-  },
-  sectionTitle: {
-    ...typography.bodyBold,
-    color: palette.text,
-  },
-  sectionBody: {
-    ...typography.body,
-    color: palette.muted,
-    lineHeight: 22,
-  },
-  closing: {
-    ...typography.body,
-    color: palette.text,
-    lineHeight: 22,
-  },
-  notice: {
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: palette.primary,
-    backgroundColor: 'rgba(11, 132, 255, 0.08)',
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  noticeText: {
-    ...typography.body,
-    color: palette.text,
-    flex: 1,
-    lineHeight: 22,
-  },
-  checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-  },
-  checkbox: {
-    width: 28,
-    height: 28,
-    borderRadius: radius.sm,
-    borderWidth: 2,
-    borderColor: palette.text,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: palette.primary,
-    borderColor: palette.primary,
-  },
-  checkboxLabel: {
-    ...typography.body,
-    color: palette.text,
-    flex: 1,
-  },
-  footer: {
-    paddingHorizontal: spacing.gutter,
-    paddingBottom: spacing.xl,
-    gap: spacing.md,
-  },
-})
 
 export default ESSITerms

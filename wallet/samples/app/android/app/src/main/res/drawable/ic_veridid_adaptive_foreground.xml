@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ~19dp inset: slightly larger mark than 24dp while staying inside typical adaptive safe zone. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/ic_veridid_mark_vector"
+    android:insetLeft="19dp"
+    android:insetTop="19dp"
+    android:insetRight="19dp"
+    android:insetBottom="19dp" />

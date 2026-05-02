@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View, StyleSheet, Text, Pressable } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -6,7 +6,8 @@ import FeatherIcon from 'react-native-vector-icons/Feather'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import { ESSIButton, ESSIProgressDots } from '../../components/essi'
-import { palette, spacing, typography, radius } from '../../theme/essi'
+import { radius, spacing, typography } from '../../theme/essi'
+import { useWalletVisualPalette, type WalletVisualPalette } from '../../theme/essi'
 import { GenericFn } from '../../types/fn'
 import { testIdWithKey } from '../../utils/testable'
 
@@ -17,8 +18,8 @@ type Slide = {
   illustration: 'keys' | 'wallet' | 'journey'
 }
 
-const renderIllustration = (type: Slide['illustration']) => {
-  const styles = StyleSheet.create({
+const renderIllustration = (type: Slide['illustration'], iconColor: string) => {
+  const row = StyleSheet.create({
     illustrationContent: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -29,27 +30,90 @@ const renderIllustration = (type: Slide['illustration']) => {
   switch (type) {
     case 'keys':
       return (
-        <View style={styles.illustrationContent}>
-          <MaterialCommunityIcons name="qrcode-scan" size={34} color={palette.text} />
-          <MaterialCommunityIcons name="application" size={34} color={palette.text} />
+        <View style={row.illustrationContent}>
+          <MaterialCommunityIcons name="qrcode-scan" size={34} color={iconColor} />
+          <MaterialCommunityIcons name="application" size={34} color={iconColor} />
         </View>
       )
     case 'wallet':
       return (
-        <View style={styles.illustrationContent}>
-          <FeatherIcon name="smartphone" size={36} color={palette.text} />
-          <FeatherIcon name="lock" size={32} color={palette.text} />
+        <View style={row.illustrationContent}>
+          <FeatherIcon name="smartphone" size={36} color={iconColor} />
+          <FeatherIcon name="lock" size={32} color={iconColor} />
         </View>
       )
     case 'journey':
     default:
       return (
-        <View style={styles.illustrationContent}>
-          <MaterialCommunityIcons name="city-variant-outline" size={36} color={palette.text} />
-          <FeatherIcon name="smartphone" size={32} color={palette.text} />
+        <View style={row.illustrationContent}>
+          <MaterialCommunityIcons name="city-variant-outline" size={36} color={iconColor} />
+          <FeatherIcon name="smartphone" size={32} color={iconColor} />
         </View>
       )
   }
+}
+
+function buildOnboardingPageStyles(p: WalletVisualPalette) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: p.background,
+    },
+    skipContainer: {
+      alignItems: 'flex-end',
+      paddingHorizontal: spacing.gutter,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+    },
+    skip: {
+      ...typography.bodyBold,
+      color: p.text,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: spacing.gutter,
+      justifyContent: 'center',
+    },
+    illustration: {
+      width: '100%',
+      height: 200,
+      borderRadius: radius.lg,
+      backgroundColor: p.surfaceSecondary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.xl,
+    },
+    title: {
+      ...typography.headline,
+      color: p.text,
+      textAlign: 'left',
+    },
+    description: {
+      ...typography.body,
+      color: p.muted,
+      marginTop: spacing.sm,
+    },
+    footer: {
+      paddingHorizontal: spacing.gutter,
+      paddingBottom: spacing.xl,
+    },
+    actions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+    },
+    progressWrapper: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    lastStepActions: {
+      gap: spacing.md,
+    },
+    nextButton: {
+      minWidth: 120,
+    },
+  })
 }
 
 const OnboardingPage: React.FC<{
@@ -63,10 +127,11 @@ const OnboardingPage: React.FC<{
   isLast: boolean
 }> = ({ slide, index, totalSlides, onNext, onBack, onSkip, isFirst, isLast }) => {
   const { t } = useTranslation()
+  const palette = useWalletVisualPalette()
+  const styles = useMemo(() => buildOnboardingPageStyles(palette), [palette])
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      {/* Skip button */}
       {!isLast && (
         <View style={styles.skipContainer}>
           <Pressable
@@ -79,15 +144,13 @@ const OnboardingPage: React.FC<{
         </View>
       )}
 
-      {/* Content */}
       <View style={styles.content}>
-        <View style={styles.illustration}>{renderIllustration(slide.illustration)}</View>
+        <View style={styles.illustration}>{renderIllustration(slide.illustration, palette.text)}</View>
 
         <Text style={styles.title}>{slide.title}</Text>
         <Text style={styles.description}>{slide.description}</Text>
       </View>
 
-      {/* Footer */}
       <View style={styles.footer}>
         {isLast ? (
           <View style={styles.lastStepActions}>
@@ -196,66 +259,5 @@ const ESSIOnboardingPages = (onTutorialCompleted: GenericFn): Array<Element> => 
 
   return [<OnboardingSlider key="onboarding-slider" />]
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.background,
-  },
-  skipContainer: {
-    alignItems: 'flex-end',
-    paddingHorizontal: spacing.gutter,
-    paddingTop: spacing.md, // SafeAreaView handles status bar, so use normal padding
-    paddingBottom: spacing.sm,
-  },
-  skip: {
-    ...typography.bodyBold,
-    color: palette.text,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: spacing.gutter,
-    justifyContent: 'center',
-  },
-  illustration: {
-    width: '100%',
-    height: 200,
-    borderRadius: radius.lg,
-    backgroundColor: palette.surfaceSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xl,
-  },
-  title: {
-    ...typography.headline,
-    color: palette.text,
-    textAlign: 'left',
-  },
-  description: {
-    ...typography.body,
-    color: palette.muted,
-    marginTop: spacing.sm,
-  },
-  footer: {
-    paddingHorizontal: spacing.gutter,
-    paddingBottom: spacing.xl,
-  },
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.md,
-  },
-  progressWrapper: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  lastStepActions: {
-    gap: spacing.md,
-  },
-  nextButton: {
-    minWidth: 120,
-  },
-})
 
 export default ESSIOnboardingPages

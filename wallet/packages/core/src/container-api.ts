@@ -18,6 +18,7 @@ import { GenericFn } from './types/fn'
 import { OnboardingStackParams, ScreenLayoutConfig, ScreenOptionsType, OnboardingTask } from './types/navigators'
 import { CustomNotification } from './types/notification'
 import { Config, HistoryEventsLoggerConfig } from './types/config'
+import { ITheme } from './theme'
 import { State } from './types/state'
 import { NotificationReturnType, NotificationsInputProps } from './hooks/notifications'
 import { NotificationListItemProps } from './components/listItems/NotificationListItem'
@@ -133,6 +134,7 @@ export const LOAD_STATE_TOKENS = {
 export const OBJECT_TOKENS = {
   OBJECT_SCREEN_CONFIG: 'object.screen-config',
   OBJECT_LAYOUT_CONFIG: 'object.screenlayout-config',
+  OBJECT_THEME: 'object.theme',
 } as const
 
 export const CACHE_TOKENS = {
@@ -211,6 +213,7 @@ export type TokenMapping = {
   [TOKENS.NOTIFICATIONS_LIST_ITEM]: React.FC<NotificationListItemProps>
   [TOKENS.OBJECT_SCREEN_CONFIG]: ScreenOptionsType
   [TOKENS.OBJECT_LAYOUT_CONFIG]: ScreenLayoutConfig
+  [TOKENS.OBJECT_THEME]: ITheme
   [TOKENS.COMPONENT_PIN_HEADER]: React.FC<PINHeaderProps>
   [TOKENS.CACHE_CRED_DEFS]: { did: string; id: string }[]
   [TOKENS.CACHE_SCHEMAS]: { did: string; id: string }[]

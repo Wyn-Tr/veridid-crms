@@ -1,3 +1,8 @@
+# iOS Simulator: @ajna-inc/poe-proofs ships MoproBindings.xcframework with ios-arm64 (device) only.
+# Simulator builds fail in mopro.swift (missing poe_proofsFFI / RustBuffer). Use a physical device:
+#   yarn ios:device   or   npx react-native run-ios --scheme AriesBifold --device
+# Long-term fix: upgrade poe-proofs when a build includes an ios-*-simulator slice, or stub the pod for sim.
+
 require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
 source 'https://cdn.cocoapods.org'
 require_relative '../node_modules/react-native/scripts/react_native_pods'

@@ -2,7 +2,7 @@ import { BasicMessageRepository, ConnectionRecord } from '@credo-ts/core'
 import { useAgent, useBasicMessagesByConnectionId, useConnectionById } from '@credo-ts/react-hooks'
 import { CommonActions, useIsFocused, useNavigation } from '@react-navigation/native'
 import { StackNavigationProp, StackScreenProps } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View, StyleSheet, Text, Pressable, KeyboardAvoidingView, Platform } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -18,7 +18,8 @@ import { BasicMessageMetadata, basicMessageCustomMetadata } from '../../types/me
 import { ContactStackParams, RootStackParams, Screens, Stacks, TabStacks } from '../../types/navigators'
 import { getConnectionName } from '../../utils/helpers'
 import { formatTime } from '../../utils/helpers'
-import { palette, spacing, typography, radius } from '../../theme/essi'
+import { radius, spacing, typography } from '../../theme/essi'
+import { isLightVisualCanvas, useWalletVisualPalette } from '../../theme/essi'
 import { CallbackType } from '../../components/chat/ChatMessage'
 
 type ESSIChatProps = StackScreenProps<ContactStackParams, Screens.Chat>
@@ -52,6 +53,196 @@ const ESSIChat: React.FC<ESSIChatProps> = ({ route }) => {
   // Bottom safe area for devices with home indicator
   // Since chat is full screen (no tab bar visible), we only need safe area
   const bottomOffset = insets.bottom
+
+  const palette = useWalletVisualPalette()
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: palette.background,
+        },
+        header: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: spacing.gutter,
+          paddingVertical: spacing.md,
+          borderBottomWidth: 1,
+          borderBottomColor: palette.outline,
+          backgroundColor: palette.surface,
+        },
+        headerCenter: {
+          flex: 1,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginHorizontal: spacing.md,
+        },
+        avatarSmall: {
+          width: 32,
+          height: 32,
+          borderRadius: 16,
+          backgroundColor: palette.card,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginRight: spacing.sm,
+        },
+        headerTitle: {
+          ...typography.bodyBold,
+          color: palette.text,
+          maxWidth: 200,
+        },
+        headerRight: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.md,
+        },
+        headerButton: {
+          padding: spacing.xxs,
+        },
+        chatContainer: {
+          flex: 1,
+          backgroundColor: palette.background,
+        },
+        messagesContainer: {
+          flexGrow: 1,
+          paddingBottom: spacing.md,
+          backgroundColor: palette.background,
+        },
+        bubbleContainer: {
+          marginVertical: spacing.xxs,
+          marginHorizontal: spacing.gutter,
+        },
+        bubbleLeft: {
+          alignItems: 'flex-start',
+        },
+        bubbleRight: {
+          alignItems: 'flex-end',
+        },
+        bubble: {
+          maxWidth: '80%',
+          borderRadius: radius.lg,
+          padding: spacing.md,
+        },
+        bubbleStyleLeft: {
+          backgroundColor: palette.surfaceSecondary,
+          borderBottomLeftRadius: radius.xs,
+        },
+        bubbleStyleRight: {
+          backgroundColor: palette.primary,
+          borderBottomRightRadius: radius.xs,
+        },
+        messageText: {
+          ...typography.body,
+        },
+        messageTextLeft: {
+          color: palette.text,
+        },
+        messageTextRight: {
+          color: palette.buttonText,
+        },
+        timeText: {
+          ...typography.caption,
+          color: palette.muted,
+          marginTop: spacing.xxs,
+          alignSelf: 'flex-end',
+        },
+        eventCard: {
+          maxWidth: '85%',
+          borderRadius: radius.lg,
+          padding: spacing.md,
+          backgroundColor: palette.surfaceSecondary,
+          borderWidth: 1,
+          borderColor: palette.outline,
+        },
+        eventCardLeft: {
+          borderBottomLeftRadius: radius.xs,
+        },
+        eventCardRight: {
+          borderBottomRightRadius: radius.xs,
+        },
+        eventIconContainer: {
+          width: 56,
+          height: 56,
+          borderRadius: 28,
+          backgroundColor: palette.card,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: spacing.sm,
+        },
+        eventText: {
+          ...typography.body,
+          color: palette.text,
+          marginBottom: spacing.xs,
+        },
+        eventTimeText: {
+          ...typography.caption,
+          color: palette.muted,
+          marginBottom: spacing.md,
+        },
+        eventButton: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: palette.primary,
+          borderRadius: radius.md,
+          paddingVertical: spacing.sm,
+          paddingHorizontal: spacing.md,
+          gap: spacing.xs,
+        },
+        eventButtonText: {
+          ...typography.bodyBold,
+          color: palette.buttonText,
+        },
+        inputToolbar: {
+          backgroundColor: palette.surface,
+          borderTopWidth: 1,
+          borderTopColor: palette.outline,
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.sm,
+        },
+        inputPrimary: {
+          alignItems: 'center',
+        },
+        composerText: {
+          ...typography.body,
+          color: palette.text,
+          backgroundColor: palette.surfaceSecondary,
+          borderRadius: radius.lg,
+          paddingHorizontal: spacing.md,
+          paddingTop: spacing.sm,
+          paddingBottom: spacing.sm,
+          marginRight: spacing.sm,
+          maxHeight: 100,
+        },
+        sendContainer: {
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginRight: spacing.xs,
+        },
+        sendButton: {
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: palette.primary,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        sendButtonDisabled: {
+          backgroundColor: palette.surfaceSecondary,
+        },
+      }),
+    [palette]
+  )
+
+  const chatListViewProps = useMemo(
+    () => ({
+      style: { backgroundColor: palette.background },
+      indicatorStyle: isLightVisualCanvas(palette.background) ? ('black' as const) : ('white' as const),
+    }),
+    [palette.background]
+  )
 
   useEffect(() => {
     setTheirLabel(getConnectionName(connection, store.preferences.alternateContactNames))
@@ -134,7 +325,7 @@ const ESSIChat: React.FC<ESSIChatProps> = ({ route }) => {
     }
   }
 
-  const renderBubble = (props: any) => {
+  const renderBubble = useCallback((props: any) => {
     const message = props.currentMessage as ExtendedChatMessage
     const isMe = message.user._id === Role.me
     const hasCallback = message.messageOpensCallbackType !== undefined
@@ -169,7 +360,7 @@ const ESSIChat: React.FC<ESSIChatProps> = ({ route }) => {
               <Text style={styles.eventButtonText}>
                 {getCallbackButtonText(message.messageOpensCallbackType)}
               </Text>
-              <FeatherIcon name="chevron-right" size={16} color={palette.text} />
+              <FeatherIcon name="chevron-right" size={16} color={palette.buttonText} />
             </Pressable>
           </View>
         </View>
@@ -181,9 +372,7 @@ const ESSIChat: React.FC<ESSIChatProps> = ({ route }) => {
       <View style={[styles.bubbleContainer, isMe ? styles.bubbleRight : styles.bubbleLeft]}>
         <View style={[styles.bubble, isMe ? styles.bubbleStyleRight : styles.bubbleStyleLeft]}>
           {message.renderEvent ? (
-            <Text style={[styles.messageText, isMe ? styles.messageTextRight : styles.messageTextLeft]}>
-              {message.text}
-            </Text>
+            message.renderEvent()
           ) : (
             <Text style={[styles.messageText, isMe ? styles.messageTextRight : styles.messageTextLeft]}>
               {message.text}
@@ -195,17 +384,21 @@ const ESSIChat: React.FC<ESSIChatProps> = ({ route }) => {
         </View>
       </View>
     )
-  }
+  }, [styles, palette, t])
 
-  const renderInputToolbar = (props: any) => (
+  const renderInputToolbar = useCallback(
+    (props: any) => (
     <InputToolbar
       {...props}
       containerStyle={styles.inputToolbar}
       primaryStyle={styles.inputPrimary}
     />
+    ),
+    [styles, t]
   )
 
-  const renderComposer = (props: any) => (
+  const renderComposer = useCallback(
+    (props: any) => (
     <Composer
       {...props}
       textInputStyle={styles.composerText}
@@ -213,14 +406,19 @@ const ESSIChat: React.FC<ESSIChatProps> = ({ route }) => {
       placeholderTextColor={palette.muted}
       textInputProps={{ accessibilityLabel: '', maxFontSizeMultiplier: 1.2 }}
     />
+    ),
+    [styles, palette, t]
   )
 
-  const renderSend = (props: any) => (
+  const renderSend = useCallback(
+    (props: any) => (
     <Send {...props} alwaysShowSend={true} disabled={!props.text} containerStyle={styles.sendContainer}>
       <View style={[styles.sendButton, !props.text && styles.sendButtonDisabled]}>
-        <FeatherIcon name="send" size={20} color={props.text ? palette.text : palette.muted} />
+        <FeatherIcon name="send" size={20} color={props.text ? palette.buttonText : palette.muted} />
       </View>
     </Send>
+    ),
+    [styles, palette]
   )
 
   return (
@@ -291,6 +489,7 @@ const ESSIChat: React.FC<ESSIChatProps> = ({ route }) => {
           disableComposer={!silentAssertConnectedNetwork()}
           keyboardShouldPersistTaps="handled"
           messagesContainerStyle={styles.messagesContainer}
+          listViewProps={chatListViewProps}
           minInputToolbarHeight={60}
           bottomOffset={bottomOffset}
           isKeyboardInternallyHandled={true}
@@ -299,180 +498,5 @@ const ESSIChat: React.FC<ESSIChatProps> = ({ route }) => {
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.gutter,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: palette.outline,
-    backgroundColor: palette.surface,
-  },
-  headerCenter: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: spacing.md,
-  },
-  avatarSmall: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: palette.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.sm,
-  },
-  headerTitle: {
-    ...typography.bodyBold,
-    color: palette.text,
-    maxWidth: 200,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  headerButton: {
-    padding: spacing.xxs,
-  },
-  chatContainer: {
-    flex: 1,
-    backgroundColor: palette.background,
-  },
-  messagesContainer: {
-    paddingBottom: spacing.md,
-  },
-  bubbleContainer: {
-    marginVertical: spacing.xxs,
-    marginHorizontal: spacing.gutter,
-  },
-  bubbleLeft: {
-    alignItems: 'flex-start',
-  },
-  bubbleRight: {
-    alignItems: 'flex-end',
-  },
-  bubble: {
-    maxWidth: '80%',
-    borderRadius: radius.lg,
-    padding: spacing.md,
-  },
-  bubbleStyleLeft: {
-    backgroundColor: palette.surfaceSecondary,
-    borderBottomLeftRadius: radius.xs,
-  },
-  bubbleStyleRight: {
-    backgroundColor: palette.primary,
-    borderBottomRightRadius: radius.xs,
-  },
-  messageText: {
-    ...typography.body,
-  },
-  messageTextLeft: {
-    color: palette.text,
-  },
-  messageTextRight: {
-    color: palette.text,
-  },
-  timeText: {
-    ...typography.caption,
-    color: palette.muted,
-    marginTop: spacing.xxs,
-    alignSelf: 'flex-end',
-  },
-  eventCard: {
-    maxWidth: '85%',
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    backgroundColor: palette.surfaceSecondary,
-    borderWidth: 1,
-    borderColor: palette.outline,
-  },
-  eventCardLeft: {
-    borderBottomLeftRadius: radius.xs,
-  },
-  eventCardRight: {
-    borderBottomRightRadius: radius.xs,
-  },
-  eventIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: palette.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  eventText: {
-    ...typography.body,
-    color: palette.text,
-    marginBottom: spacing.xs,
-  },
-  eventTimeText: {
-    ...typography.caption,
-    color: palette.muted,
-    marginBottom: spacing.md,
-  },
-  eventButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: palette.primary,
-    borderRadius: radius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    gap: spacing.xs,
-  },
-  eventButtonText: {
-    ...typography.bodyBold,
-    color: palette.text,
-  },
-  inputToolbar: {
-    backgroundColor: palette.surface,
-    borderTopWidth: 1,
-    borderTopColor: palette.outline,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
-  },
-  inputPrimary: {
-    alignItems: 'center',
-  },
-  composerText: {
-    ...typography.body,
-    color: palette.text,
-    backgroundColor: palette.surfaceSecondary,
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.sm,
-    marginRight: spacing.sm,
-    maxHeight: 100,
-  },
-  sendContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.xs,
-  },
-  sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: palette.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sendButtonDisabled: {
-    backgroundColor: palette.surfaceSecondary,
-  },
-})
 
 export default ESSIChat

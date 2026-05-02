@@ -12,7 +12,12 @@ import Svg, { Defs, LinearGradient, Rect, Stop, SvgXml } from 'react-native-svg'
 import { ESSIScreen, ESSIInfoCard } from '../../components/essi'
 import { useOpenIDCredentials } from '../../modules/openid/context/OpenIDCredentialRecordProvider'
 import { OpenIDCredentialType } from '../../modules/openid/types'
-import { palette, radius, spacing, typography } from '../../theme/essi'
+import { radius, spacing, typography } from '../../theme/essi'
+import {
+  isLightVisualCanvas,
+  useWalletVisualPalette,
+  type WalletVisualPalette,
+} from '../../theme/essi'
 import { Screens, Stacks } from '../../types/navigators'
 import { testIdWithKey } from '../../utils/testable'
 import { getEffectiveCredentialName, ensureCredentialMetadata, getCredentialIdentifiers, toImageSource } from '../../utils/credential'
@@ -70,26 +75,145 @@ const getCredentialTypeLabel = (credentialType: 'law' | 'education' | 'default')
   }
 }
 
-// Theme colors for different credential types
-const CREDENTIAL_THEMES = {
-  law: {
-    accent: '#D4AF37', // Gold
-    iconBg: '#2A2520',
-    gradientStart: '#1E1B18',
-    gradientEnd: '#2D2520',
-  },
-  education: {
-    accent: '#4A90D9', // Academic Blue
-    iconBg: '#1A2530',
-    gradientStart: '#181E28',
-    gradientEnd: '#1E2835',
-  },
-  default: {
-    accent: palette.primary,
-    iconBg: palette.card,
-    gradientStart: palette.surfaceSecondary,
-    gradientEnd: palette.surfaceSecondary,
-  },
+type CredentialCardTheme = {
+  accent: string
+  iconBg: string
+  gradientStart: string
+  gradientEnd: string
+}
+
+function credentialCardVisualThemes(p: WalletVisualPalette): Record<'law' | 'education' | 'default', CredentialCardTheme> {
+  return {
+    law: {
+      accent: '#D4AF37',
+      iconBg: '#2A2520',
+      gradientStart: '#1E1B18',
+      gradientEnd: '#2D2520',
+    },
+    education: {
+      accent: '#4A90D9',
+      iconBg: '#1A2530',
+      gradientStart: '#181E28',
+      gradientEnd: '#1E2835',
+    },
+    default: {
+      accent: p.primary,
+      iconBg: p.card,
+      gradientStart: p.surfaceSecondary,
+      gradientEnd: p.surfaceSecondary,
+    },
+  }
+}
+
+function buildCredentialListStyles(p: WalletVisualPalette) {
+  return StyleSheet.create({
+    listContainer: {
+      paddingHorizontal: spacing.gutter,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.xl * 2,
+    },
+    separator: {
+      height: spacing.md,
+    },
+    openIdCardContainer: {
+      borderRadius: radius.lg,
+      backgroundColor: p.surfaceSecondary,
+      borderWidth: 1,
+      borderColor: p.outline,
+      padding: spacing.xs,
+      overflow: 'hidden',
+      shadowColor: '#000',
+      shadowOpacity: 0.25,
+      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 4 },
+      elevation: 3,
+    },
+    credentialCard: {
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      borderWidth: 1,
+      overflow: 'hidden',
+    },
+    cardTopSection: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: spacing.md,
+    },
+    cardTopRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    credentialIcon: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    badgeImage: {
+      width: 56,
+      height: 56,
+      borderRadius: 12,
+    },
+    typeBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.pill,
+    },
+    typeBadgeText: {
+      ...typography.caption,
+      fontWeight: '600',
+    },
+    issuerTitle: {
+      ...typography.headline,
+      fontSize: 20,
+      color: p.text,
+      marginBottom: spacing.xs,
+    },
+    credentialType: {
+      ...typography.body,
+      fontWeight: '500',
+      marginBottom: spacing.md,
+    },
+    divider: {
+      height: 1,
+      marginBottom: spacing.md,
+    },
+    attributesPreview: {
+      gap: spacing.xs,
+    },
+    attributeRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    attributeLabel: {
+      ...typography.body,
+      color: p.muted,
+      flex: 1,
+    },
+    attributeValue: {
+      ...typography.body,
+      color: p.text,
+      opacity: 0.8,
+    },
+    moreAttributes: {
+      ...typography.caption,
+      marginTop: spacing.xs,
+    },
+    accentLine: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: 3,
+    },
+  })
 }
 
 const getCredentialType = (issuer: string, credentialName: string): 'law' | 'education' | 'default' => {
@@ -162,13 +286,16 @@ const CredentialCard: React.FC<CredentialCardProps> = ({ credential, onPress, te
   const [bundleResolver] = useServices([TOKENS.UTIL_OCA_RESOLVER])
   const [overlay, setOverlay] = useState<CredentialOverlay<BrandingOverlay>>({})
   const gradientId = `essi-cred-list-gradient-${credential.id}`
+  const palette = useWalletVisualPalette()
+  const styles = useMemo(() => buildCredentialListStyles(palette), [palette])
+  const cardThemes = useMemo(() => credentialCardVisualThemes(palette), [palette])
 
   // Get raw issuer from connection
   const rawIssuer = connection?.theirLabel || connection?.alias || t('Credentials.UnknownIssuer')
 
   // Get credential type first (needed for display name)
   const credentialType = getCredentialType(rawIssuer, credentialName)
-  const theme = CREDENTIAL_THEMES[credentialType]
+  const theme = cardThemes[credentialType]
 
   // Get display names
   const displayIssuer = getDisplayIssuerName(rawIssuer)
@@ -382,6 +509,9 @@ interface OpenBadgeCardProps {
 }
 
 const OpenBadgeCard: React.FC<OpenBadgeCardProps> = ({ record, onPress, testID }) => {
+  const palette = useWalletVisualPalette()
+  const light = isLightVisualCanvas(palette.background)
+  const styles = useMemo(() => buildCredentialListStyles(palette), [palette])
   const credential = record.credential as any
   // Handle credentialSubject being an array (OpenBadges 3.0 spec)
   const subject = Array.isArray(credential?.credentialSubject)
@@ -397,33 +527,36 @@ const OpenBadgeCard: React.FC<OpenBadgeCardProps> = ({ record, onPress, testID }
   const issuerName = issuer?.name || record.derived?.issuerName || 'Issuer'
   const badgeType = achievement?.achievementType || 'Badge'
 
+  const accent = palette.primary
+  const cardBg = light ? palette.surfaceSecondary : '#1A1F2E'
+  const cardBorder = light ? palette.outline : `${accent}40`
+  const iconBg = light ? palette.card : '#2A2F3E'
+
   return (
-    <Pressable
-      style={[styles.credentialCard, { backgroundColor: '#1A1F2E', borderColor: '#6366F1' + '40' }]}
-      onPress={onPress}
-      testID={testID}
-    >
+    <Pressable style={[styles.credentialCard, { backgroundColor: cardBg, borderColor: cardBorder }]} onPress={onPress} testID={testID}>
       <View style={styles.cardTopSection}>
         {badgeImage ? (
           <Image source={{ uri: badgeImage }} style={styles.badgeImage} resizeMode="contain" />
         ) : (
-          <View style={[styles.credentialIcon, { backgroundColor: '#2A2F3E' }]}>
-            <FeatherIcon name="award" size={28} color="#6366F1" />
+          <View style={[styles.credentialIcon, { backgroundColor: iconBg }]}>
+            <FeatherIcon name="award" size={28} color={accent} />
           </View>
         )}
         <View style={styles.cardTopRight}>
-          <View style={[styles.typeBadge, { backgroundColor: '#6366F1' + '20' }]}>
-            <FeatherIcon name="award" size={12} color="#6366F1" />
-            <Text style={[styles.typeBadgeText, { color: '#6366F1' }]}>{badgeType}</Text>
+          <View style={[styles.typeBadge, { backgroundColor: `${accent}33` }]}>
+            <FeatherIcon name="award" size={12} color={accent} />
+            <Text style={[styles.typeBadgeText, { color: accent }]}>{badgeType}</Text>
           </View>
           <FeatherIcon name="chevron-right" size={20} color={palette.muted} />
         </View>
       </View>
 
-      <Text style={styles.issuerTitle} numberOfLines={1}>{issuerName}</Text>
-      <Text style={[styles.credentialType, { color: '#6366F1' }]}>{badgeName}</Text>
+      <Text style={styles.issuerTitle} numberOfLines={1}>
+        {issuerName}
+      </Text>
+      <Text style={[styles.credentialType, { color: accent }]}>{badgeName}</Text>
 
-      <View style={[styles.divider, { backgroundColor: '#6366F1' + '30' }]} />
+      <View style={[styles.divider, { backgroundColor: `${accent}4D` }]} />
 
       {achievement?.description && (
         <Text style={[styles.attributeLabel, { marginBottom: spacing.sm }]} numberOfLines={2}>
@@ -431,12 +564,77 @@ const OpenBadgeCard: React.FC<OpenBadgeCardProps> = ({ record, onPress, testID }
         </Text>
       )}
 
-      <View style={[styles.accentLine, { backgroundColor: '#6366F1' }]} />
+      <View style={[styles.accentLine, { backgroundColor: accent }]} />
     </Pressable>
   )
 }
 
 const ESSICredentials: React.FC = () => {
+  const palette = useWalletVisualPalette()
+  const sheet = useMemo(() => buildCredentialListStyles(palette), [palette])
+  const emptySheet = useMemo(() => {
+    const light = isLightVisualCanvas(palette.background)
+    return StyleSheet.create({
+      emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: spacing.gutter,
+      },
+      emptyButtonsContainer: {
+        marginTop: spacing.xl,
+        gap: spacing.md,
+        width: '100%',
+      },
+      addButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.xs,
+        backgroundColor: palette.primary,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
+        borderRadius: radius.lg,
+      },
+      addButtonSecondary: light
+        ? {
+            /** Dark gray CTA — not pure black (VeriDID reference) */
+            backgroundColor: '#4A4A4A',
+            borderWidth: 0,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: spacing.xs,
+            paddingHorizontal: spacing.lg,
+            paddingVertical: spacing.md,
+            borderRadius: radius.lg,
+          }
+        : {
+            backgroundColor: palette.surfaceSecondary,
+            borderWidth: 1,
+            borderColor: palette.outline,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: spacing.xs,
+            paddingHorizontal: spacing.lg,
+            paddingVertical: spacing.md,
+            borderRadius: radius.lg,
+          },
+      addButtonTextPrimary: {
+        ...typography.bodyBold,
+        /** Primary pink CTA: white label (VeriDID) */
+        color: light ? palette.surface : palette.buttonText,
+      },
+      addButtonTextSecondary: {
+        ...typography.bodyBold,
+        color: light ? palette.surface : palette.text,
+      },
+    })
+  }, [palette])
+
+  const emptyPrimaryCtaIconColor = isLightVisualCanvas(palette.background) ? palette.surface : palette.buttonText
+
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<any>>()
   const { records: credentials } = useCredentials()
@@ -538,25 +736,21 @@ const ESSICredentials: React.FC = () => {
   }
 
   const renderEmptyState = () => (
-    <View style={styles.emptyContainer}>
+    <View style={emptySheet.emptyContainer}>
       <ESSIInfoCard
         icon={<FeatherIcon name="credit-card" size={48} color={palette.text} />}
         title={t('Credentials.EmptyList')}
         subtitle={t('Credentials.GetVerifiableCredentials')}
         testID={testIdWithKey('CredentialsEmptyState')}
       />
-      <View style={styles.emptyButtonsContainer}>
-        <Pressable style={styles.addButton} onPress={handleAddCredential} testID={testIdWithKey('AddCredentialButton')}>
-          <FeatherIcon name="plus" size={20} color={palette.text} />
-          <Text style={styles.addButtonText}>{t('Credentials.AddCredential')}</Text>
+      <View style={emptySheet.emptyButtonsContainer}>
+        <Pressable style={emptySheet.addButton} onPress={handleAddCredential} testID={testIdWithKey('AddCredentialButton')}>
+          <FeatherIcon name="plus" size={20} color={emptyPrimaryCtaIconColor} />
+          <Text style={emptySheet.addButtonTextPrimary}>{t('Credentials.AddCredential')}</Text>
         </Pressable>
-        <Pressable
-          style={[styles.addButton, styles.addButtonSecondary]}
-          onPress={handleAddGovernmentID}
-          testID={testIdWithKey('AddGovernmentIDButton')}
-        >
-          <FeatherIcon name="shield" size={20} color={palette.text} />
-          <Text style={styles.addButtonText}>{t('Credentials.AddGovernmentID')}</Text>
+        <Pressable style={emptySheet.addButtonSecondary} onPress={handleAddGovernmentID} testID={testIdWithKey('AddGovernmentIDButton')}>
+          <FeatherIcon name="shield" size={20} color={emptySheet.addButtonTextSecondary.color} />
+          <Text style={emptySheet.addButtonTextSecondary}>{t('Credentials.AddGovernmentID')}</Text>
         </Pressable>
       </View>
     </View>
@@ -569,7 +763,7 @@ const ESSICredentials: React.FC = () => {
   }) => {
     if (item instanceof W3cCredentialRecord) {
       return (
-        <View style={styles.openIdCardContainer}>
+        <View style={sheet.openIdCardContainer}>
           <OpenIDCredentialCard
             credentialRecord={item}
             onPress={() =>
@@ -585,7 +779,7 @@ const ESSICredentials: React.FC = () => {
 
     if (item instanceof SdJwtVcRecord) {
       return (
-        <View style={styles.openIdCardContainer}>
+        <View style={sheet.openIdCardContainer}>
           <OpenIDCredentialCard
             credentialRecord={item}
             onPress={() =>
@@ -601,7 +795,7 @@ const ESSICredentials: React.FC = () => {
 
     if (item instanceof MdocRecord) {
       return (
-        <View style={styles.openIdCardContainer}>
+        <View style={sheet.openIdCardContainer}>
           <OpenIDCredentialCard
             credentialRecord={item}
             onPress={() =>
@@ -638,7 +832,7 @@ const ESSICredentials: React.FC = () => {
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             testID={testIdWithKey('AddCredentialHeaderButton')}
           >
-            <FeatherIcon name="plus" size={22} color={palette.text} />
+            <FeatherIcon name="plus" size={22} color={palette.buttonText} />
           </Pressable>
         ) : null
       }
@@ -655,9 +849,9 @@ const ESSICredentials: React.FC = () => {
             if (item instanceof MdocRecord) return `mdoc-${item.id}`
             return `anon-${item.id}`
           }}
-          contentContainerStyle={styles.listContainer}
+          contentContainerStyle={sheet.listContainer}
           showsVerticalScrollIndicator={false}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ItemSeparatorComponent={() => <View style={sheet.separator} />}
         />
       ) : (
         renderEmptyState()
@@ -665,144 +859,5 @@ const ESSICredentials: React.FC = () => {
     </ESSIScreen>
   )
 }
-
-const styles = StyleSheet.create({
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.gutter,
-  },
-  emptyButtonsContainer: {
-    marginTop: spacing.xl,
-    gap: spacing.md,
-    width: '100%',
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    backgroundColor: palette.primary,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: radius.lg,
-  },
-  addButtonSecondary: {
-    backgroundColor: palette.surfaceSecondary,
-    borderWidth: 1,
-    borderColor: palette.outline,
-  },
-  addButtonText: {
-    ...typography.bodyBold,
-    color: palette.text,
-  },
-  listContainer: {
-    paddingHorizontal: spacing.gutter,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.xl * 2,
-  },
-  separator: {
-    height: spacing.md,
-  },
-  openIdCardContainer: {
-    borderRadius: radius.lg,
-    backgroundColor: palette.surfaceSecondary,
-    borderWidth: 1,
-    borderColor: palette.outline,
-    padding: spacing.xs,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
-  },
-  credentialCard: {
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  cardTopSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: spacing.md,
-  },
-  cardTopRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  credentialIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeImage: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
-  },
-  typeBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.pill,
-  },
-  typeBadgeText: {
-    ...typography.caption,
-    fontWeight: '600',
-  },
-  issuerTitle: {
-    ...typography.headline,
-    fontSize: 20,
-    color: palette.text,
-    marginBottom: spacing.xs,
-  },
-  credentialType: {
-    ...typography.body,
-    fontWeight: '500',
-    marginBottom: spacing.md,
-  },
-  divider: {
-    height: 1,
-    marginBottom: spacing.md,
-  },
-  attributesPreview: {
-    gap: spacing.xs,
-  },
-  attributeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  attributeLabel: {
-    ...typography.body,
-    color: palette.muted,
-    flex: 1,
-  },
-  attributeValue: {
-    ...typography.body,
-    color: palette.text,
-    opacity: 0.8,
-  },
-  moreAttributes: {
-    ...typography.caption,
-    marginTop: spacing.xs,
-  },
-  accentLine: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 3,
-  },
-})
 
 export default ESSICredentials

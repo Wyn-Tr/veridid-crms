@@ -1,3 +1,3 @@
 <resources>
-    <string name="app_name">ESSI Wallet</string>
+    <!-- Native launcher label comes from Gradle `app_launcher_name` (see `APP_DISPLAY_NAME` in `.env`). -->
 </resources>

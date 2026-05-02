@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from 'react'
+import React, { useCallback, useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View, Text, StyleSheet, Linking, Platform, Switch, Pressable } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -9,7 +9,8 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 
 import { ESSIButton } from '../../components/essi'
-import { palette, spacing, typography, radius } from '../../theme/essi'
+import { spacing, typography, radius } from '../../theme/essi'
+import { isLightVisualCanvas, useWalletVisualPalette } from '../../theme/essi'
 import { testIdWithKey } from '../../utils/testable'
 import { useAuth } from '../../contexts/auth'
 import { DispatchAction } from '../../contexts/reducers/store'
@@ -21,8 +22,94 @@ type BiometryParams = {
   onboarding?: boolean
 }
 
+function buildStyles(p: ReturnType<typeof useWalletVisualPalette>) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: p.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.gutter,
+      paddingTop: spacing.xl,
+      paddingBottom: spacing.md,
+      gap: spacing.md,
+    },
+    headerTitle: {
+      ...typography.title,
+      color: p.text,
+      flex: 1,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: spacing.gutter,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    iconContainer: {
+      width: 160,
+      height: 160,
+      borderRadius: 80,
+      backgroundColor: p.surfaceSecondary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.xl,
+    },
+    title: {
+      ...typography.title,
+      color: p.text,
+      textAlign: 'center',
+      marginBottom: spacing.md,
+    },
+    descriptionContainer: {
+      gap: spacing.sm,
+      marginBottom: spacing.xl,
+    },
+    description: {
+      ...typography.body,
+      color: p.muted,
+      textAlign: 'center',
+      lineHeight: 22,
+    },
+    warningText: {
+      ...typography.bodyBold,
+      color: p.text,
+    },
+    toggleCard: {
+      width: '100%',
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: p.outline,
+      backgroundColor: p.surfaceSecondary,
+      padding: spacing.lg,
+    },
+    toggleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    toggleTextContainer: {
+      flex: 1,
+      marginRight: spacing.md,
+    },
+    toggleTitle: {
+      ...typography.bodyBold,
+      color: p.text,
+      fontSize: 16,
+    },
+    footer: {
+      paddingHorizontal: spacing.gutter,
+      paddingBottom: spacing.xl,
+    },
+  })
+}
+
 const ESSIBiometry: React.FC = () => {
   const { t } = useTranslation()
+  const palette = useWalletVisualPalette()
+  const styles = useMemo(() => buildStyles(palette), [palette])
+  const switchThumbColor = isLightVisualCanvas(palette.background) ? palette.surface : palette.text
   const navigation = useNavigation<StackNavigationProp<any>>()
   const route = useRoute<RouteProp<{ params: BiometryParams }, 'params'>>()
   const [store, dispatch] = useStore()
@@ -188,7 +275,7 @@ const ESSIBiometry: React.FC = () => {
               value={biometryEnabled}
               onValueChange={toggleSwitch}
               trackColor={{ false: palette.outline, true: palette.primary }}
-              thumbColor={palette.text}
+              thumbColor={switchThumbColor}
             />
           </View>
         </View>
@@ -212,86 +299,5 @@ const ESSIBiometry: React.FC = () => {
     </SafeAreaView>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.gutter,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.md,
-    gap: spacing.md,
-  },
-  headerTitle: {
-    ...typography.title,
-    color: palette.text,
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: spacing.gutter,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconContainer: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: palette.surfaceSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xl,
-  },
-  title: {
-    ...typography.title,
-    color: palette.text,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-  },
-  descriptionContainer: {
-    gap: spacing.sm,
-    marginBottom: spacing.xl,
-  },
-  description: {
-    ...typography.body,
-    color: palette.muted,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  warningText: {
-    ...typography.bodyBold,
-    color: palette.text,
-  },
-  toggleCard: {
-    width: '100%',
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: palette.outline,
-    backgroundColor: palette.surfaceSecondary,
-    padding: spacing.lg,
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  toggleTextContainer: {
-    flex: 1,
-    marginRight: spacing.md,
-  },
-  toggleTitle: {
-    ...typography.bodyBold,
-    color: palette.text,
-    fontSize: 16,
-  },
-  footer: {
-    paddingHorizontal: spacing.gutter,
-    paddingBottom: spacing.xl,
-  },
-})
 
 export default ESSIBiometry
