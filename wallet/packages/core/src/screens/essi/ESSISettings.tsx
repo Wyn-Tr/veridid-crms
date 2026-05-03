@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { View, Text, StyleSheet, Pressable, ScrollView, Switch } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -6,7 +6,8 @@ import { useTranslation } from 'react-i18next'
 import FeatherIcon from 'react-native-vector-icons/Feather'
 
 import { ESSIScreen } from '../../components/essi'
-import { palette, radius, spacing, typography } from '../../theme/essi'
+import { radius, spacing, typography } from '../../theme/essi'
+import { isLightVisualCanvas, useWalletVisualPalette } from '../../theme/essi'
 import { Screens } from '../../types/navigators'
 import { testIdWithKey } from '../../utils/testable'
 import { useStore } from '../../contexts/store'
@@ -35,6 +36,43 @@ const SettingsItem: React.FC<SettingsItemProps> = ({
   onToggle,
   testID,
 }) => {
+  const palette = useWalletVisualPalette()
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        settingsItem: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          padding: spacing.lg,
+          gap: spacing.md,
+          minHeight: 72,
+        },
+        settingsIconContainer: {
+          width: 48,
+          height: 48,
+          borderRadius: 24,
+          backgroundColor: palette.card,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        settingsContent: {
+          flex: 1,
+        },
+        settingsTitle: {
+          fontSize: 16,
+          fontWeight: '600',
+          color: palette.text,
+          marginBottom: spacing.xs,
+        },
+        settingsSubtitle: {
+          fontSize: 14,
+          color: palette.muted,
+          lineHeight: 20,
+        },
+      }),
+    [palette]
+  )
+
   const content = (
     <View style={styles.settingsItem}>
       <View style={styles.settingsIconContainer}>
@@ -49,7 +87,7 @@ const SettingsItem: React.FC<SettingsItemProps> = ({
           value={toggleValue}
           onValueChange={onToggle}
           trackColor={{ false: palette.outline, true: palette.primary }}
-          thumbColor={palette.text}
+          thumbColor={isLightVisualCanvas(palette.background) ? '#5C5C5C' : palette.text}
           testID={`${testID}-toggle`}
         />
       ) : showChevron ? (
@@ -75,6 +113,30 @@ interface SettingsSectionProps {
 }
 
 const SettingsSection: React.FC<SettingsSectionProps> = ({ title, children }) => {
+  const palette = useWalletVisualPalette()
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        section: {
+          marginBottom: spacing.xl,
+        },
+        sectionTitle: {
+          ...typography.caption,
+          color: palette.muted,
+          textTransform: 'uppercase',
+          letterSpacing: 0.5,
+          marginBottom: spacing.sm,
+          marginLeft: spacing.xs,
+        },
+        sectionContent: {
+          backgroundColor: palette.surfaceSecondary,
+          borderRadius: radius.lg,
+          overflow: 'hidden',
+        },
+      }),
+    [palette]
+  )
+
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -84,6 +146,25 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ title, children }) =>
 }
 
 const ESSISettings: React.FC = () => {
+  const palette = useWalletVisualPalette()
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        scrollView: {
+          flex: 1,
+        },
+        container: {
+          paddingVertical: spacing.md,
+        },
+        divider: {
+          height: 1,
+          backgroundColor: palette.outline,
+          marginLeft: 76,
+        },
+      }),
+    [palette]
+  )
+
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<any>>()
   const [store, dispatch] = useStore()
@@ -264,64 +345,5 @@ const ESSISettings: React.FC = () => {
     </ESSIScreen>
   )
 }
-
-const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-  },
-  container: {
-    paddingVertical: spacing.md,
-  },
-  section: {
-    marginBottom: spacing.xl,
-  },
-  sectionTitle: {
-    ...typography.caption,
-    color: palette.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: spacing.sm,
-    marginLeft: spacing.xs,
-  },
-  sectionContent: {
-    backgroundColor: palette.surfaceSecondary,
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-  },
-  settingsItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.lg,
-    gap: spacing.md,
-    minHeight: 72,
-  },
-  settingsIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: palette.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  settingsContent: {
-    flex: 1,
-  },
-  settingsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: palette.text,
-    marginBottom: spacing.xs,
-  },
-  settingsSubtitle: {
-    fontSize: 14,
-    color: palette.muted,
-    lineHeight: 20,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: palette.outline,
-    marginLeft: 76, // Icon width (48) + gap (12) + padding (16)
-  },
-})
 
 export default ESSISettings

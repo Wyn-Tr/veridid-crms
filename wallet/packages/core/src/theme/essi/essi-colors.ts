@@ -1,3 +1,7 @@
+/**
+ * Static ESSI reference palette (legacy). **Do not import in React UI**; use `useWalletVisualPalette()` so colors
+ * follow `TOKENS.OBJECT_THEME` / `WALLET_THEME`. Safe for non-UI modules only.
+ */
 export const palette = {
   background: '#050505',
   surface: '#0E0E0E',

@@ -1,6 +1,8 @@
-import React, { useRef, useState, useEffect, useImperativeHandle, forwardRef } from 'react'
+import React, { useRef, useState, useEffect, useImperativeHandle, forwardRef, useMemo } from 'react'
 import { View, TextInput, StyleSheet, Text, Pressable } from 'react-native'
-import { palette, radius, spacing } from '../../theme/essi'
+
+import { radius, spacing } from '../../theme/essi'
+import { useWalletVisualPalette } from '../../theme/essi'
 
 interface ESSICodeInputProps {
   length?: number
@@ -23,6 +25,59 @@ const ESSICodeInputComponent = (
   { length = 6, onComplete, secureTextEntry = true, testID, autoReset = false, useCustomKeypad = false }: ESSICodeInputProps,
   ref: React.ForwardedRef<ESSICodeInputRef>
 ) => {
+  const palette = useWalletVisualPalette()
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          alignItems: 'center',
+          width: '100%',
+          paddingHorizontal: spacing.lg,
+        },
+        hiddenInput: {
+          position: 'absolute',
+          opacity: 0,
+          width: 1,
+          height: 1,
+        },
+        boxes: {
+          flexDirection: 'row',
+          gap: spacing.xs,
+          justifyContent: 'space-between',
+          width: '100%',
+        },
+        box: {
+          flex: 1,
+          height: 56,
+          borderRadius: radius.md,
+          borderWidth: 2,
+          borderColor: palette.outline,
+          backgroundColor: palette.surfaceSecondary,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        boxFilled: {
+          borderColor: palette.primary,
+          backgroundColor: palette.surface,
+        },
+        boxActive: {
+          borderColor: palette.primary,
+        },
+        digit: {
+          fontSize: 24,
+          fontWeight: '600',
+          color: palette.text,
+        },
+        dot: {
+          width: 12,
+          height: 12,
+          borderRadius: 6,
+          backgroundColor: palette.text,
+        },
+      }),
+    [palette]
+  )
+
   const [code, setCode] = useState('')
   const [shouldReset, setShouldReset] = useState(false)
   const inputRef = useRef<TextInput>(null)
@@ -102,11 +157,7 @@ const ESSICodeInputComponent = (
           testID={`${testID}-input`}
         />
       )}
-      <Pressable
-        style={styles.boxes}
-        onPress={() => !useCustomKeypad && inputRef.current?.focus()}
-        testID={`${testID}-boxes`}
-      >
+      <Pressable style={styles.boxes} onPress={() => !useCustomKeypad && inputRef.current?.focus()} testID={`${testID}-boxes`}>
         {boxes}
       </Pressable>
     </View>
@@ -116,52 +167,3 @@ const ESSICodeInputComponent = (
 ESSICodeInputComponent.displayName = 'ESSICodeInput'
 
 export const ESSICodeInput = forwardRef<ESSICodeInputRef, ESSICodeInputProps>(ESSICodeInputComponent)
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    width: '100%',
-    // Match keypad horizontal padding so PIN boxes align with keypad width
-    paddingHorizontal: spacing.lg,
-  },
-  hiddenInput: {
-    position: 'absolute',
-    opacity: 0,
-    width: 1,
-    height: 1,
-  },
-  boxes: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  box: {
-    flex: 1,
-    height: 56,
-    borderRadius: radius.md,
-    borderWidth: 2,
-    borderColor: palette.outline,
-    backgroundColor: palette.surfaceSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  boxFilled: {
-    borderColor: palette.primary,
-    backgroundColor: palette.surface,
-  },
-  boxActive: {
-    borderColor: palette.primary,
-  },
-  digit: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: palette.text,
-  },
-  dot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: palette.text,
-  },
-})

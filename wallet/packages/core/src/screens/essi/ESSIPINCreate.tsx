@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useMemo } from 'react'
 import { View, Text, StyleSheet, Alert } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -6,7 +6,8 @@ import { useTranslation } from 'react-i18next'
 
 import { ESSIScreen, ESSICodeInput, ESSIProgressDots, ESSIKeypad } from '../../components/essi'
 import { ESSICodeInputRef } from '../../components/essi/ESSICodeInput'
-import { palette, spacing, typography } from '../../theme/essi'
+import { spacing, typography } from '../../theme/essi'
+import { useWalletVisualPalette } from '../../theme/essi'
 import { testIdWithKey } from '../../utils/testable'
 import { useAuth } from '../../contexts/auth'
 import { useStore } from '../../contexts/store'
@@ -21,8 +22,41 @@ interface ESSIPINCreateProps {
   setAuthenticated: (status: boolean) => void
 }
 
+function buildStyles(p: ReturnType<typeof useWalletVisualPalette>) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    content: {
+      alignItems: 'center',
+      paddingTop: spacing.lg,
+      paddingHorizontal: spacing.gutter,
+      marginBottom: spacing.lg,
+    },
+    title: {
+      ...typography.title,
+      color: p.text,
+      textAlign: 'center',
+      marginBottom: spacing.sm,
+    },
+    subtitle: {
+      ...typography.body,
+      color: p.muted,
+      textAlign: 'center',
+      marginBottom: spacing.xl,
+    },
+    keypadContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      paddingHorizontal: spacing.md,
+    },
+  })
+}
+
 const ESSIPINCreate: React.FC<ESSIPINCreateProps> = ({ setAuthenticated }) => {
   const { t } = useTranslation()
+  const palette = useWalletVisualPalette()
+  const styles = useMemo(() => buildStyles(palette), [palette])
   const navigation = useNavigation<StackNavigationProp<any>>()
   const [, dispatch] = useStore()
   const { setPIN: setWalletPIN } = useAuth()
@@ -143,34 +177,5 @@ const ESSIPINCreate: React.FC<ESSIPINCreateProps> = ({ setAuthenticated }) => {
     </ESSIScreen>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    alignItems: 'center',
-    paddingTop: spacing.lg,
-    paddingHorizontal: spacing.gutter,
-    marginBottom: spacing.lg,
-  },
-  title: {
-    ...typography.title,
-    color: palette.text,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  subtitle: {
-    ...typography.body,
-    color: palette.muted,
-    textAlign: 'center',
-    marginBottom: spacing.xl,
-  },
-  keypadContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.md,
-  },
-})
 
 export default ESSIPINCreate

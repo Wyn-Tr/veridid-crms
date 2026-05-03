@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { View, Text, StyleSheet, ScrollView, StatusBar, Pressable } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import FeatherIcon from 'react-native-vector-icons/Feather'
-import { palette, spacing, typography } from '../../theme/essi'
+import { spacing, typography } from '../../theme/essi'
+import { statusBarStyleForBackground, useWalletVisualPalette } from '../../theme/essi'
 
 type SafeAreaEdge = 'top' | 'left' | 'right' | 'bottom'
 
@@ -27,6 +28,55 @@ export const ESSIScreen: React.FC<ESSIScreenProps> = ({
   testID,
   safeAreaEdges = ['left', 'right', 'bottom'],
 }) => {
+  const palette = useWalletVisualPalette()
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: palette.background,
+        },
+        safeArea: {
+          flex: 1,
+        },
+        header: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: spacing.gutter,
+          paddingVertical: spacing.md,
+          borderBottomWidth: 1,
+          borderBottomColor: palette.outline,
+        },
+        headerLeft: {
+          flex: 1,
+          alignItems: 'flex-start',
+        },
+        headerTitle: {
+          ...typography.headline,
+          color: palette.text,
+          flex: 2,
+          textAlign: 'center',
+        },
+        headerRight: {
+          flex: 1,
+          alignItems: 'flex-end',
+        },
+        headerRightText: {
+          ...typography.body,
+          color: palette.text,
+        },
+        scrollView: {
+          flex: 1,
+        },
+        contentContainer: {
+          padding: spacing.gutter,
+          flexGrow: 1,
+        },
+      }),
+    [palette]
+  )
+
   const renderHeaderLeft = () => {
     if (headerLeft === 'back') {
       return (
@@ -65,7 +115,10 @@ export const ESSIScreen: React.FC<ESSIScreenProps> = ({
 
   return (
     <View style={styles.container} testID={testID}>
-      <StatusBar barStyle="light-content" backgroundColor={palette.background} />
+      <StatusBar
+        barStyle={statusBarStyleForBackground(palette.background)}
+        backgroundColor={palette.background}
+      />
       <SafeAreaView style={styles.safeArea} edges={safeAreaEdges}>
         {(headerTitle || headerLeft || headerRight) && (
           <View style={styles.header}>
@@ -83,47 +136,3 @@ export const ESSIScreen: React.FC<ESSIScreenProps> = ({
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.background,
-  },
-  safeArea: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.gutter,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: palette.outline,
-  },
-  headerLeft: {
-    flex: 1,
-    alignItems: 'flex-start',
-  },
-  headerTitle: {
-    ...typography.headline,
-    color: palette.text,
-    flex: 2,
-    textAlign: 'center',
-  },
-  headerRight: {
-    flex: 1,
-    alignItems: 'flex-end',
-  },
-  headerRightText: {
-    ...typography.body,
-    color: palette.text,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: spacing.gutter,
-    flexGrow: 1,
-  },
-})

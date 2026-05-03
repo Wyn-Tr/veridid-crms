@@ -64,6 +64,7 @@ import { AgentBridge } from './services/AgentBridge'
 import { KanonOCABundleResolver } from './utils/KanonOCAResolver'
 import { IRefreshOrchestrator } from './modules/openid/refresh/types'
 import { RefreshOrchestrator } from './modules/openid/refresh/refreshOrchestrator'
+import { essiTheme } from './theme/essi/essi-theme'
 
 export const defaultConfig: Config = {
   PINSecurity: {
@@ -156,6 +157,7 @@ export class MainContainer implements Container {
     this._container.registerInstance(TOKENS.CRED_HELP_ACTION_OVERRIDES, [])
     this._container.registerInstance(TOKENS.OBJECT_SCREEN_CONFIG, DefaultScreenOptionsDictionary)
     this._container.registerInstance(TOKENS.OBJECT_LAYOUT_CONFIG, DefaultScreenLayoutOptions)
+    this._container.registerInstance(TOKENS.OBJECT_THEME, essiTheme)
     this._container.registerInstance(TOKENS.UTIL_LOGGER, bifoldLoggerInstance)
     const ocaResolver = new KanonOCABundleResolver(bundle)
     this._container.registerInstance(TOKENS.UTIL_OCA_RESOLVER, ocaResolver)

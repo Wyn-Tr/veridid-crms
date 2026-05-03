@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
 import FeatherIcon from 'react-native-vector-icons/Feather'
 
-import { palette, spacing, typography, radius } from '../../theme/essi'
+import { spacing, typography } from '../../theme/essi'
+import { useWalletVisualPalette } from '../../theme/essi'
 
 interface ESSIKeypadProps {
   onDigitPress: (digit: string) => void
@@ -21,6 +22,48 @@ const ESSIKeypad: React.FC<ESSIKeypadProps> = ({
   disabled = false,
   testID,
 }) => {
+  const palette = useWalletVisualPalette()
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          paddingHorizontal: spacing.lg,
+        },
+        row: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          marginBottom: spacing.md,
+        },
+        button: {
+          width: 72,
+          height: 72,
+          borderRadius: 36,
+          backgroundColor: palette.surfaceSecondary,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        buttonEmpty: {
+          width: 72,
+          height: 72,
+        },
+        buttonPressed: {
+          backgroundColor: palette.primary,
+        },
+        buttonDisabled: {
+          opacity: 0.5,
+        },
+        buttonText: {
+          ...typography.title,
+          fontSize: 28,
+          color: palette.text,
+        },
+        buttonTextDisabled: {
+          color: palette.muted,
+        },
+      }),
+    [palette]
+  )
+
   const renderButton = (value: string | 'delete' | 'biometric', index: number) => {
     const isDelete = value === 'delete'
     const isBiometric = value === 'biometric'
@@ -81,42 +124,5 @@ const ESSIKeypad: React.FC<ESSIKeypadProps> = ({
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: spacing.lg,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  button: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: palette.surfaceSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonEmpty: {
-    width: 72,
-    height: 72,
-  },
-  buttonPressed: {
-    backgroundColor: palette.primary,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    ...typography.title,
-    fontSize: 28,
-    color: palette.text,
-  },
-  buttonTextDisabled: {
-    color: palette.muted,
-  },
-})
 
 export default ESSIKeypad

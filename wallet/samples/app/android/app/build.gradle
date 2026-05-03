@@ -195,7 +195,72 @@ dependencies {
     }
 }
 
+// react-native-config: force absolute `.env` next to package.json so Gradle always loads it
+// (dotenv.gradle falls back to `new File(envFile)` when the first path misses).
+def walletDotEnvFile = file("${project.projectDir}/../../.env")
+if (walletDotEnvFile.exists()) {
+    System.setProperty('ENVFILE', walletDotEnvFile.absolutePath)
+}
+
 apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
+
+// Read WALLET_THEME from the same .env file on disk (last matching line wins). Using this for
+// native resources avoids stale values when Gradle configuration cache / plugin order leaves
+// splash overlay or launcher icon on the wrong theme after you change .env.
+def readWalletThemeForResFromFile = { File envFile ->
+    if (envFile == null || !envFile.exists()) {
+        return 'essiwallet'
+    }
+    def theme = 'essiwallet'
+    envFile.eachLine { String line ->
+        def trimmed = line.trim()
+        if (trimmed.isEmpty() || trimmed.startsWith('#')) {
+            return
+        }
+        def m = trimmed =~ /^WALLET_THEME\s*=\s*(.+)$/
+        if (!m.find()) {
+            return
+        }
+        def v = m.group(1).trim()
+        if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+            v = v.substring(1, v.length() - 1)
+        }
+        theme = v.toLowerCase()
+    }
+    return theme
+}
+
+def walletThemeForRes = readWalletThemeForResFromFile(walletDotEnvFile)
+// VeriDID-only overlay (splash + API 31 theme). ESSI matches master: @mipmap/ic_launcher, no custom splash overlay.
+def splashResOverlayDir =
+    walletThemeForRes.contains('veridid') ? 'res-splash-veridid' : null
+
+android {
+    defaultConfig {
+        def displayName = project.env.get('APP_DISPLAY_NAME') ?: 'ESSI Wallet'
+        resValue 'string', 'app_launcher_name', "\"${displayName.replaceAll('%', '\\\\u0025')}\""
+        def theme = walletThemeForRes
+        def explicit = project.env.get('ANDROID_LAUNCHER_MIPMAP')
+        def mipmapBase =
+            explicit
+                ?: (theme.contains('veridid') ? 'ic_launcher_veridid' : 'ic_launcher')
+        manifestPlaceholders.androidLauncherIconMipmap = "@mipmap/${mipmapBase}"
+        manifestPlaceholders.androidLauncherRoundIconMipmap = "@mipmap/${mipmapBase}"
+    }
+}
+
+// Append VeriDID splash resources after other plugins configure sourceSets (last srcDir wins merges).
+afterEvaluate {
+    if (splashResOverlayDir == null) {
+        return
+    }
+    def splashDir = file("${project.projectDir}/src/main/${splashResOverlayDir}").canonicalFile
+    def resDirs = android.sourceSets.main.res.srcDirs
+    def already = resDirs.any { it.canonicalFile == splashDir }
+    if (!already) {
+        android.sourceSets.main.res.srcDirs += splashDir
+    }
+}
 
 // Force dependency versions for 16KB page alignment support (Android 15+)
 configurations.all {

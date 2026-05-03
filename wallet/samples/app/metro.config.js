@@ -4,7 +4,41 @@
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config')
 const escape = require('escape-string-regexp')
 const exclusionList = require('metro-config/src/defaults/exclusionList')
+const fs = require('fs')
 const path = require('path')
+
+const dotEnvPath = path.join(__dirname, '.env')
+
+/**
+ * Last non-comment `WALLET_THEME=` wins (dotenv-style). Skips `# ...` lines so a doc line like
+ * `# WALLET_THEME: essi | veridid` is never mistaken for an assignment.
+ */
+function readWalletThemeFromDotEnvFile() {
+  try {
+    const text = fs.readFileSync(dotEnvPath, 'utf8')
+    let value = ''
+    for (const line of text.split(/\r?\n/)) {
+      const trimmed = line.trim()
+      if (trimmed === '' || trimmed.startsWith('#')) {
+        continue
+      }
+      const m = trimmed.match(/^WALLET_THEME\s*=\s*(.*)$/)
+      if (!m) {
+        continue
+      }
+      let v = m[1].trim()
+      const inlineComment = v.search(/\s+#/)
+      if (inlineComment >= 0) {
+        v = v.slice(0, inlineComment).trim()
+      }
+      v = v.replace(/^["']|["']$/g, '').trim()
+      value = v
+    }
+    return value
+  } catch {
+    return ''
+  }
+}
 
 const packageDirs = [
   path.resolve(__dirname, '../../packages/core'),
@@ -34,6 +68,9 @@ for (const packageDir of packageDirs) {
     return acc
   }, extraNodeModules)
 }
+
+// Virtual `@env` from react-native-dotenv: Metro must resolve a real path; Babel then strips imports.
+extraNodeModules['@env'] = path.resolve(__dirname, 'shims/env')
 
 const {
   resolver: { sourceExts, assetExts },
@@ -65,6 +102,22 @@ const config = {
     unstable_conditionNames: ['react-native', 'browser', 'import', 'require'],
   },
   watchFolders,
+  server: {
+    enhanceMiddleware: (middleware) => {
+      return (req, res, next) => {
+        const pathname = (req.url ?? '').split('?')[0]
+        if (pathname === '/wallet-theme-dev.json') {
+          res.writeHead(200, {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store',
+          })
+          res.end(JSON.stringify({ WALLET_THEME: readWalletThemeFromDotEnvFile() }))
+          return
+        }
+        return middleware(req, res, next)
+      }
+    },
+  },
 }
 
 module.exports = mergeConfig(getDefaultConfig(__dirname), config)

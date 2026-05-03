@@ -22,6 +22,10 @@ export const ThemeProvider = ({ themes, defaultThemeName, children }: ThemeProvi
   const [store, dispatch] = useStore()
 
   const activeTheme = useMemo(() => {
+    // Single injected theme (sample app): ignore persisted name so old values (e.g. `bifold`) never pin wrong colors after reskin.
+    if (themes.length === 1) {
+      return themes[0]
+    }
     return (
       (store.preferences.theme && themes.find((t) => t.themeName === store.preferences.theme)) ||
       themes.find((t) => t.themeName === defaultThemeName) ||

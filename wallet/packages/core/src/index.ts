@@ -167,6 +167,8 @@ export type { InlineMessageProps } from './components/inputs/InlineErrorText'
 export { InlineErrorPosition } from './types/error'
 
 export * from './container-api'
+export { setWalletThemeDevResolver } from './dev/wallet-theme-dev'
+export type { WalletThemeDevResolver } from './dev/wallet-theme-dev'
 export { MainContainer } from './container-impl'
 export type { CredentialListFooterProps }
 

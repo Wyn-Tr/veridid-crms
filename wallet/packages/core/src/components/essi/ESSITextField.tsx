@@ -1,12 +1,45 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { View, TextInput, Text, StyleSheet, TextInputProps } from 'react-native'
-import { palette, radius, spacing, typography } from '../../theme/essi'
+
+import { radius, spacing, typography } from '../../theme/essi'
+import { useWalletVisualPalette } from '../../theme/essi'
 
 interface ESSITextFieldProps extends Omit<TextInputProps, 'style'> {
   label?: string
   error?: string
   containerStyle?: any
   inputStyle?: any
+}
+
+function buildFieldStyles(p: ReturnType<typeof useWalletVisualPalette>) {
+  return StyleSheet.create({
+    container: {
+      marginBottom: spacing.md,
+    },
+    label: {
+      ...typography.bodyBold,
+      color: p.text,
+      marginBottom: spacing.xs,
+    },
+    input: {
+      ...typography.body,
+      backgroundColor: p.surfaceSecondary,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: p.outline,
+      padding: spacing.md,
+      color: p.text,
+      minHeight: 56,
+    },
+    inputError: {
+      borderColor: p.danger,
+    },
+    error: {
+      ...typography.caption,
+      color: p.danger,
+      marginTop: spacing.xs,
+    },
+  })
 }
 
 export const ESSITextField: React.FC<ESSITextFieldProps> = ({
@@ -16,6 +49,9 @@ export const ESSITextField: React.FC<ESSITextFieldProps> = ({
   inputStyle,
   ...textInputProps
 }) => {
+  const palette = useWalletVisualPalette()
+  const styles = useMemo(() => buildFieldStyles(palette), [palette])
+
   return (
     <View style={[styles.container, containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}
@@ -28,32 +64,3 @@ export const ESSITextField: React.FC<ESSITextFieldProps> = ({
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: spacing.md,
-  },
-  label: {
-    ...typography.bodyBold,
-    color: palette.text,
-    marginBottom: spacing.xs,
-  },
-  input: {
-    ...typography.body,
-    backgroundColor: palette.surfaceSecondary,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: palette.outline,
-    padding: spacing.md,
-    color: palette.text,
-    minHeight: 56,
-  },
-  inputError: {
-    borderColor: palette.danger,
-  },
-  error: {
-    ...typography.caption,
-    color: palette.danger,
-    marginTop: spacing.xs,
-  },
-})

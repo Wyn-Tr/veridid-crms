@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- VeriDID adaptive icon + splash (API 26+ / 31+). ESSI builds use @mipmap/ic_launcher like master. -->
+    <color name="ic_launcher_bg_veridid">#F8F8F8</color>
+</resources>

@@ -926,20 +926,20 @@ export function createChatTheme(theme: { ColorPalette: IColorPalette; TextTheme:
       marginTop: 8,
     },
     leftText: {
-      color: theme.ColorPalette.brand.secondary,
+      color: theme.ColorPalette.brand.text,
       fontSize: theme.TextTheme.normal.fontSize,
     },
     leftTextHighlighted: {
       ...theme.TextTheme.bold,
-      color: theme.ColorPalette.brand.secondary,
+      color: theme.ColorPalette.brand.text,
     },
     rightText: {
-      color: theme.ColorPalette.brand.secondary,
+      color: theme.ColorPalette.brand.buttonText,
       fontSize: theme.TextTheme.normal.fontSize,
     },
     rightTextHighlighted: {
       ...theme.TextTheme.bold,
-      color: theme.ColorPalette.brand.secondary,
+      color: theme.ColorPalette.brand.buttonText,
     },
     inputText: {
       lineHeight: undefined,
@@ -950,6 +950,7 @@ export function createChatTheme(theme: { ColorPalette: IColorPalette; TextTheme:
       fontSize: theme.TextTheme.normal.fontSize,
       fontWeight: 'bold',
       textAlign: 'center',
+      color: theme.ColorPalette.brand.buttonText,
     },
     documentIcon: {
       color: theme.ColorPalette.grayscale.white,
